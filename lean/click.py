@@ -267,7 +267,7 @@ def ensure_options(options: List[str]) -> None:
         if not has_value and key in options:
             missing_options.append(key)
 
-    if len(missing_options) == 0:
+    if not missing_options:
         return
 
     missing_options = sorted(missing_options, key=lambda param: options.index(param))

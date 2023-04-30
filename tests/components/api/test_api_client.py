@@ -32,47 +32,58 @@ def test_get_logger():
     return logger
 
 def test_get_makes_get_request_to_given_endpoint(requests_mock: RequestsMock) -> None:
-    requests_mock.add(requests_mock.GET, API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        requests_mock.GET, f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
     api.get("endpoint")
 
     assert len(requests_mock.calls) == 1
-    assert requests_mock.calls[0].request.url == API_BASE_URL + "endpoint"
+    assert requests_mock.calls[0].request.url == f"{API_BASE_URL}endpoint"
 
 
 def test_get_attaches_parameters_to_url(requests_mock: RequestsMock) -> None:
-    requests_mock.add(requests_mock.GET, API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        requests_mock.GET, f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
     api.get("endpoint", {"key1": "value1", "key2": "value2"})
 
     assert len(requests_mock.calls) == 1
-    assert requests_mock.calls[0].request.url == API_BASE_URL + "endpoint?key1=value1&key2=value2"
+    assert (
+        requests_mock.calls[0].request.url
+        == f"{API_BASE_URL}endpoint?key1=value1&key2=value2"
+    )
 
 
 def test_post_makes_post_request_to_given_endpoint(requests_mock: RequestsMock) -> None:
-    requests_mock.add(requests_mock.POST, API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        requests_mock.POST, f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
     api.post("endpoint")
 
     assert len(requests_mock.calls) == 1
-    assert requests_mock.calls[0].request.url == API_BASE_URL + "endpoint"
+    assert requests_mock.calls[0].request.url == f"{API_BASE_URL}endpoint"
 
 
 def test_post_sets_body_of_request_as_json(requests_mock: RequestsMock) -> None:
-    requests_mock.add(requests_mock.POST, API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        requests_mock.POST, f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
     api.post("endpoint", {"key1": "value1", "key2": "value2"})
 
     assert len(requests_mock.calls) == 1
-    assert requests_mock.calls[0].request.url == API_BASE_URL + "endpoint"
+    assert requests_mock.calls[0].request.url == f"{API_BASE_URL}endpoint"
 
     body = json.loads(requests_mock.calls[0].request.body)
 
@@ -81,21 +92,25 @@ def test_post_sets_body_of_request_as_json(requests_mock: RequestsMock) -> None:
 
 
 def test_post_sets_body_of_request_as_form_data(requests_mock: RequestsMock) -> None:
-    requests_mock.add(requests_mock.POST, API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        requests_mock.POST, f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
     api.post("endpoint", {"key1": "value1", "key2": "value2"}, data_as_json=False)
 
     assert len(requests_mock.calls) == 1
-    assert requests_mock.calls[0].request.url == API_BASE_URL + "endpoint"
+    assert requests_mock.calls[0].request.url == f"{API_BASE_URL}endpoint"
 
     assert requests_mock.calls[0].request.body == "key1=value1&key2=value2"
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_makes_authenticated_requests(method: str, requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        method.upper(), f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -111,7 +126,9 @@ def test_api_client_makes_authenticated_requests(method: str, requests_mock: Req
 
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_returns_data_when_success_is_true(method: str, requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        method.upper(), f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -123,7 +140,7 @@ def test_api_client_returns_data_when_success_is_true(method: str, requests_mock
 
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_authentication_error_on_http_500(method: str, requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", status=500)
+    requests_mock.add(method.upper(), f"{API_BASE_URL}endpoint", status=500)
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -135,7 +152,7 @@ def test_api_client_raises_authentication_error_on_http_500(method: str, request
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_request_failed_error_on_failing_response_non_http_500(method: str,
                                                                                  requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", status=404)
+    requests_mock.add(method.upper(), f"{API_BASE_URL}endpoint", status=404)
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -147,9 +164,11 @@ def test_api_client_raises_request_failed_error_on_failing_response_non_http_500
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_authentication_error_on_error_complaining_about_hash(method: str,
                                                                                 requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(),
-                      API_BASE_URL + "endpoint",
-                      '{ "success": false, "errors": ["Hash doesn\'t match."] }')
+    requests_mock.add(
+        method.upper(),
+        f"{API_BASE_URL}endpoint",
+        '{ "success": false, "errors": ["Hash doesn\'t match."] }',
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -161,9 +180,11 @@ def test_api_client_raises_authentication_error_on_error_complaining_about_hash(
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_request_failed_error_when_response_contains_errors(method: str,
                                                                               requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(),
-                      API_BASE_URL + "endpoint",
-                      '{ "success": false, "errors": ["Error 1", "Error 2"] }')
+    requests_mock.add(
+        method.upper(),
+        f"{API_BASE_URL}endpoint",
+        '{ "success": false, "errors": ["Error 1", "Error 2"] }',
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -177,9 +198,11 @@ def test_api_client_raises_request_failed_error_when_response_contains_errors(me
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_request_failed_error_when_response_contains_messages(method: str,
                                                                                 requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(),
-                      API_BASE_URL + "endpoint",
-                      '{ "success": false, "messages": ["Message 1", "Message 2"] }')
+    requests_mock.add(
+        method.upper(),
+        f"{API_BASE_URL}endpoint",
+        '{ "success": false, "messages": ["Message 1", "Message 2"] }',
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -193,9 +216,11 @@ def test_api_client_raises_request_failed_error_when_response_contains_messages(
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_raises_request_failed_error_when_response_contains_internal_error(method: str,
                                                                                       requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(),
-                      API_BASE_URL + "endpoint",
-                      '{ "success": false, "Message": "Internal Error 21" }')
+    requests_mock.add(
+        method.upper(),
+        f"{API_BASE_URL}endpoint",
+        '{ "success": false, "Message": "Internal Error 21" }',
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -214,7 +239,9 @@ def test_api_client_retries_request_when_response_is_http_5xx_error(method: str,
                                                                     status_code: int,
                                                                     expected_error: Any,
                                                                     requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", status=status_code)
+    requests_mock.add(
+        method.upper(), f"{API_BASE_URL}endpoint", status=status_code
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")
@@ -222,12 +249,14 @@ def test_api_client_retries_request_when_response_is_http_5xx_error(method: str,
     with pytest.raises(expected_error):
         getattr(api, method)("endpoint")
 
-    requests_mock.assert_call_count(API_BASE_URL + "endpoint", 2)
+    requests_mock.assert_call_count(f"{API_BASE_URL}endpoint", 2)
 
 
 @pytest.mark.parametrize("method", ["get", "post"])
 def test_api_client_sets_user_agent(method: str, requests_mock: RequestsMock) -> None:
-    requests_mock.add(method.upper(), API_BASE_URL + "endpoint", '{ "success": true }')
+    requests_mock.add(
+        method.upper(), f"{API_BASE_URL}endpoint", '{ "success": true }'
+    )
 
     logger = test_get_logger()
     api = APIClient(logger, HTTPClient(logger), "123", "456")

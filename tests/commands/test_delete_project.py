@@ -48,7 +48,7 @@ def test_delete_project_locally_that_does_not_have_cloud_counterpart() -> None:
     assert_project_exists(path)
 
     cloud_projects = create_cloud_projects()
-    assert not any(project.name == path for project in cloud_projects)
+    assert all(project.name != path for project in cloud_projects)
 
     with mock.patch.object(container.api_client.projects, 'get_all', return_value=cloud_projects) as mock_get_all,\
          mock.patch.object(container.api_client.projects, 'delete', return_value=None) as mock_delete:
@@ -68,7 +68,7 @@ def test_delete_project_deletes_in_cloud(name_or_id: str) -> None:
     assert_project_exists(path)
 
     cloud_projects = create_cloud_projects(10)
-    assert not any(project.name == path for project in cloud_projects)
+    assert all(project.name != path for project in cloud_projects)
 
     cloud_project = create_api_project(len(cloud_projects) + 1, path)
     cloud_projects.append(cloud_project)

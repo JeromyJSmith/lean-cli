@@ -62,9 +62,11 @@ class QCProjectLibrary(WrappedBaseModel):
         return hash(self.projectId)
 
     def __eq__(self, other: Any):
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self.projectId == other.projectId
+        return (
+            self.projectId == other.projectId
+            if isinstance(other, type(self))
+            else NotImplemented
+        )
 
 
 class QCProject(WrappedBaseModel):
@@ -84,9 +86,7 @@ class QCProject(WrappedBaseModel):
 
     @validator("parameters", pre=True)
     def process_parameters_dict(cls, value: Any) -> Any:
-        if isinstance(value, dict):
-            return list(value.values())
-        return value
+        return list(value.values()) if isinstance(value, dict) else value
 
     def get_url(self) -> str:
         """Returns the url of the project page in the cloud.
@@ -99,9 +99,11 @@ class QCProject(WrappedBaseModel):
         return hash(self.projectId)
 
     def __eq__(self, other: Any):
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self.projectId == other.projectId
+        return (
+            self.projectId == other.projectId
+            if isinstance(other, type(self))
+            else NotImplemented
+        )
 
 
 class QCCreatedProject(WrappedBaseModel):
@@ -228,7 +230,7 @@ class QCBacktest(WrappedBaseModel):
         table.add_column("Statistic", overflow="fold")
         table.add_column("Value", overflow="fold")
 
-        for i in range(int(len(stats) / 4)):
+        for i in range(len(stats) // 4):
             start = i * 4
             end = (i + 1) * 4
             table.add_row(*stats[start:end], end_section=end_of_first_section == end)
@@ -480,9 +482,7 @@ class QCOptimization(WrappedBaseModel):
     def parse_empty_lists(cls, value: Any) -> Any:
         # If these fields have no data, they are assigned an array by default
         # For consistency we convert those empty arrays to empty dicts
-        if isinstance(value, list):
-            return {}
-        return value
+        return {} if isinstance(value, list) else value
 
     def get_progress(self) -> float:
         """Returns the progress of the optimization between 0.0 and 1.0.

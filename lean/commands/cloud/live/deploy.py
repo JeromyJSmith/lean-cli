@@ -34,16 +34,34 @@ def _log_notification_methods(methods: List[QCNotificationMethod]) -> None:
     logger = container.logger
 
     email_methods = [method for method in methods if isinstance(method, QCEmailNotificationMethod)]
-    email_methods = "None" if len(email_methods) == 0 else ", ".join(method.address for method in email_methods)
+    email_methods = (
+        ", ".join(method.address for method in email_methods)
+        if email_methods
+        else "None"
+    )
 
     webhook_methods = [method for method in methods if isinstance(method, QCWebhookNotificationMethod)]
-    webhook_methods = "None" if len(webhook_methods) == 0 else ", ".join(method.address for method in webhook_methods)
+    webhook_methods = (
+        ", ".join(method.address for method in webhook_methods)
+        if webhook_methods
+        else "None"
+    )
 
     sms_methods = [method for method in methods if isinstance(method, QCSMSNotificationMethod)]
-    sms_methods = "None" if len(sms_methods) == 0 else ", ".join(method.phoneNumber for method in sms_methods)
+    sms_methods = (
+        ", ".join(method.phoneNumber for method in sms_methods)
+        if sms_methods
+        else "None"
+    )
 
     telegram_methods = [method for method in methods if isinstance(method, QCTelegramNotificationMethod)]
-    telegram_methods = "None" if len(telegram_methods) == 0 else ", ".join(f"{{{method.id}, {method.token}}}" for method in telegram_methods)
+    telegram_methods = (
+        ", ".join(
+            f"{{{method.id}, {method.token}}}" for method in telegram_methods
+        )
+        if telegram_methods
+        else "None"
+    )
 
     logger.info(f"Email notifications: {email_methods}")
     logger.info(f"Webhook notifications: {webhook_methods}")
@@ -71,7 +89,11 @@ def _prompt_notification_method() -> QCNotificationMethod:
         headers = {}
 
         while True:
-            headers_str = "None" if headers == {} else ", ".join(f"{key}={headers[key]}" for key in headers)
+            headers_str = (
+                ", ".join(f"{key}={headers[key]}" for key in headers)
+                if headers
+                else "None"
+            )
             logger.info(f"Headers: {headers_str}")
 
             if not confirm("Do you want to add a header?", default=False):
@@ -85,8 +107,7 @@ def _prompt_notification_method() -> QCNotificationMethod:
     elif selected_method == "telegram":
         chat_id = prompt("User Id/Group Id")
 
-        custom_bot = confirm("Is a custom bot being used?", default=False)
-        if custom_bot:
+        if custom_bot := confirm("Is a custom bot being used?", default=False):
             token = prompt("Token (optional)")
         else:
             token = None
@@ -123,7 +144,7 @@ def _configure_live_node(logger: Logger, api_client: APIClient, cloud_project: Q
     nodes = api_client.nodes.get_all(cloud_project.organizationId)
 
     live_nodes = [node for node in nodes.live if not node.busy]
-    if len(live_nodes) == 0:
+    if not live_nodes:
         raise RuntimeError(
             f"You don't have any live nodes available, you can manage your nodes on https://www.quantconnect.com/organization/{cloud_project.organizationId}/resources")
 
@@ -186,14 +207,8 @@ def _configure_auto_restart(logger: Logger) -> bool:
               help="A comma-separated list of 'url:HEADER_1=VALUE_1:HEADER_2=VALUE_2:etc' pairs configuring webhook-notifications")
 @option("--notify-sms", type=str, help="A comma-separated list of phone numbers configuring SMS-notifications")
 @option("--notify-telegram", type=str, help="A comma-separated list of 'user/group Id:token(optional)' pairs configuring telegram-notifications")
-@option("--live-cash-balance",
-              type=str,
-              default="",
-              help=f"A comma-separated list of currency:amount pairs of initial cash balance")
-@option("--live-holdings",
-              type=str,
-              default="",
-              help=f"A comma-separated list of symbol:symbolId:quantity:averagePrice of initial portfolio holdings")
+@option("--live-cash-balance", type=str, default="", help="A comma-separated list of currency:amount pairs of initial cash balance")
+@option("--live-holdings", type=str, default="", help="A comma-separated list of symbol:symbolId:quantity:averagePrice of initial portfolio holdings")
 @option("--push",
               is_flag=True,
               default=False,
@@ -278,15 +293,16 @@ def deploy(project: str,
                 notify_methods.append(QCWebhookNotificationMethod(address=address, headers=headers))
 
         if notify_sms is not None:
-            for phoneNumber in notify_sms.split(","):
-                notify_methods.append(QCSMSNotificationMethod(phoneNumber=phoneNumber))
-
+            notify_methods.extend(
+                QCSMSNotificationMethod(phoneNumber=phoneNumber)
+                for phoneNumber in notify_sms.split(",")
+            )
         if notify_telegram is not None:
             for config in notify_telegram.split(","):
                 id_token_pair = config.split(":", 1)    # telegram token is like "01234567:Abc132xxx..."
                 if len(id_token_pair) == 2:
                     chat_id, token = id_token_pair
-                    token = None if not token else token
+                    token = token if token else None
                     notify_methods.append(QCTelegramNotificationMethod(id=chat_id, token=token))
                 else:
                     notify_methods.append(QCTelegramNotificationMethod(id=id_token_pair[0]))

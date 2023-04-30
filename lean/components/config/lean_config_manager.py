@@ -117,7 +117,6 @@ class LeanConfigManager:
             # If we can't get the Lean config then it must be from the lean init.
             # Therefore, we can trust it's valid
             self._logger.debug(f"LeanConfigManager.store_known_lean_config_path(): Failed to get Lean config: {e}")
-            pass
         lean_config_paths = set(self._cache_storage.get("known-lean-config-paths", []))
         lean_config_paths.add(str(path))
         self._cache_storage.set("known-lean-config-paths", list(lean_config_paths))
@@ -212,11 +211,10 @@ class LeanConfigManager:
             lines = [line for line in lines if f"\"{key}\": " not in line]
         config = "\n".join(lines)
 
-        # Instead of setting the IQFeed host we require the user to set the IQConnect location
-        config = config.replace('"iqfeed-host": "127.0.0.1"',
-                                '"iqfeed-iqconnect": "C:/Program Files (x86)/DTN/IQFeed/iqconnect.exe"')
-
-        return config
+        return config.replace(
+            '"iqfeed-host": "127.0.0.1"',
+            '"iqfeed-iqconnect": "C:/Program Files (x86)/DTN/IQFeed/iqconnect.exe"',
+        )
 
     def get_complete_lean_config(self,
                                  environment: str,
@@ -344,9 +342,7 @@ class LeanConfigManager:
                             double_quotes_count = double_quotes_count + 1
                         new_config += current_element
                     previous_element = current_element
-            result = loads(new_config)
-            return result
-
+            return loads(new_config)
         except Exception as e:
             self._logger.error(str(e))
 

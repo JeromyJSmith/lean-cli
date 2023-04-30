@@ -113,7 +113,7 @@ def create_fake_lean_cli_project(name: str, language: str) -> None:
         """,
     }
     project_data = _get_python_project_files(Path.cwd() / name) if language.lower() == "python" else _get_csharp_project_files(Path.cwd() / name)
-    files.update(project_data)
+    files |= project_data
 
     _write_fake_directory(files)
 

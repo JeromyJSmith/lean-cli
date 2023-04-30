@@ -191,7 +191,7 @@ class LeanRunner:
 
         # Install the required modules when they're needed
         if lean_config.get("data-provider", None) == "QuantConnect.Lean.Engine.DataFeeds.DownloaderDataProvider" \
-            and lean_config.get("data-downloader", None) == "TerminalLinkDataDownloader":
+                and lean_config.get("data-downloader", None) == "TerminalLinkDataDownloader":
             self._module_manager.install_module(TERMINAL_LINK_PRODUCT_ID, lean_config["job-organization-id"])
 
         # Force the use of the LocalDisk map/factor providers if no recent zip present and not using ApiDataProvider
@@ -283,7 +283,7 @@ class LeanRunner:
             if key not in lean_config:
                 continue
 
-            if lean_config[key] == "localhost" or lean_config[key] == "127.0.0.1":
+            if lean_config[key] in ["localhost", "127.0.0.1"]:
                 lean_config[key] = "host.docker.internal"
 
         set_up_common_csharp_options_called = False
@@ -708,7 +708,11 @@ for library_id, library_data in project_assets["targets"][project_target].items(
         zip_names = sorted([f.name for f in zip_dir.iterdir() if f.name.endswith(".zip")], reverse=True)
         zip_names = [sub(r"[^\d]", "", name) for name in zip_names]
 
-        if len(zip_names) == 0 or (datetime.now() - datetime.strptime(zip_names[0], "%Y%m%d")).days > 7:
+        if (
+            not zip_names
+            or (datetime.now() - datetime.strptime(zip_names[0], "%Y%m%d")).days
+            > 7
+        ):
             lean_config[config_key] = disk_provider
 
     def setup_language_specific_run_options(self, run_options, project_dir, algorithm_file,

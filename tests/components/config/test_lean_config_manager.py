@@ -572,8 +572,7 @@ def test_get_complete_lean_config_sets_python_additional_paths_when_there_are_li
     expected_python_paths = [(Path("/") / relative_library_dir).as_posix(), "/Library"]
 
     assert python_additional_paths is not None
-    assert len(python_additional_paths) == len(python_additional_paths)
-    assert all([path in expected_python_paths for path in python_additional_paths])
+    assert all(path in expected_python_paths for path in python_additional_paths)
 
 
 @pytest.mark.parametrize("provider,limit,result", [

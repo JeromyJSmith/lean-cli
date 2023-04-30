@@ -41,8 +41,6 @@ try:
 except Exception as e:
     # No need to do anything if file isn't available
     error = str(e)
-    pass
-
 # check if file exists
 if not Path(file_path).is_file():
     error_message = f": {error}" if error is not None else ""

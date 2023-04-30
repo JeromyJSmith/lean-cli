@@ -20,9 +20,6 @@ from lean.models import json_modules
 
 all_local_brokerages: List[LocalBrokerage] = []
 all_local_data_feeds: List[DataFeed] = []
-local_brokerage_data_feeds: Dict[Type[LocalBrokerage],
-                                 List[Type[DataFeed]]] = {}
-
 for json_module in json_modules:
     if "local-brokerage" in json_module["type"]:
         all_local_brokerages.append(LocalBrokerage(json_module))
@@ -34,5 +31,9 @@ if not [container.platform_manager.is_host_windows() or environ.get("__README__"
     all_local_data_feeds = [
         data_feed for data_feed in all_local_data_feeds if data_feed._id != "IQFeed"]
 
-for local_brokerage in all_local_brokerages:
-    local_brokerage_data_feeds[local_brokerage] = all_local_data_feeds
+local_brokerage_data_feeds: Dict[
+    Type[LocalBrokerage], List[Type[DataFeed]]
+] = {
+    local_brokerage: all_local_data_feeds
+    for local_brokerage in all_local_brokerages
+}

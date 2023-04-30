@@ -52,8 +52,10 @@ def _assert_library_reference_was_not_added_to_csharp_project_csproj_file(projec
     xml_manager = container.xml_manager
     csproj_tree = xml_manager.parse(project_csproj_file.read_text(encoding="utf-8"))
 
-    assert not any(str(library_dir) in project_reference.get("Include", "")
-                   for project_reference in csproj_tree.findall('.//ProjectReference'))
+    assert all(
+        str(library_dir) not in project_reference.get("Include", "")
+        for project_reference in csproj_tree.findall('.//ProjectReference')
+    )
 
 
 def test_adds_library_reference_to_python_project() -> None:

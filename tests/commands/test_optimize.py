@@ -117,7 +117,10 @@ def test_optimize_mounts_optimizer_config() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([mount["Target"] == "/Lean/Optimizer.Launcher/bin/Debug/config.json" for mount in kwargs["mounts"]])
+    assert any(
+        mount["Target"] == "/Lean/Optimizer.Launcher/bin/Debug/config.json"
+        for mount in kwargs["mounts"]
+    )
 
 
 def test_optimize_mounts_lean_config() -> None:
@@ -137,7 +140,10 @@ def test_optimize_mounts_lean_config() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([mount["Target"] == f"{LEAN_ROOT_PATH}/config.json" for mount in kwargs["mounts"]])
+    assert any(
+        mount["Target"] == f"{LEAN_ROOT_PATH}/config.json"
+        for mount in kwargs["mounts"]
+    )
 
 
 def test_optimize_mounts_data_directory() -> None:
@@ -157,7 +163,9 @@ def test_optimize_mounts_data_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Lean/Data")
     assert key == str(Path.cwd() / "data")
@@ -180,7 +188,9 @@ def test_optimize_mounts_output_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Results" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Results" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Results")
     assert key == str(Path.cwd() / "output")
@@ -351,7 +361,7 @@ def test_optimize_creates_correct_config_from_given_optimizer_config() -> None:
     mount = next(m for m in kwargs["mounts"] if m["Target"] == "/Lean/Optimizer.Launcher/bin/Debug/config.json")
     config = json.loads(Path(mount["Source"]).read_text(encoding="utf-8"))
 
-    assert not any([key.startswith("algorithm-") for key in config.keys()])
+    assert not any(key.startswith("algorithm-") for key in config.keys())
 
     assert config["results-destination-folder"] == "/Results"
 

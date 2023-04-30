@@ -47,7 +47,7 @@ class Option:
 
         :param value: the non-empty new value of the option
         """
-        if value == "":
+        if not value:
             raise ValueError("Value cannot be empty")
 
         self._storage.set(self.key, value)
@@ -82,9 +82,8 @@ class ChoiceOption(Option):
         self.allowed_values = allowed_values
         self.default_value = default_value
 
-        if description.endswith("."):
-            description = description[:-1]
-        description = description + f" (allowed values: {', '.join(allowed_values)})."
+        description = description.removesuffix(".")
+        description += f" (allowed values: {', '.join(allowed_values)})."
 
         super().__init__(key, description, is_sensitive, storage)
 

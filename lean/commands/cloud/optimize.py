@@ -287,7 +287,7 @@ def optimize(project: str,
     backtests = [b for b in backtests if
                  _backtest_meets_constraints(b, optimization_constraints)]
 
-    if len(backtests) == 0:
+    if not backtests:
         logger.info("No optimal parameter combination found, no successful backtests meet all constraints")
         return
 
@@ -303,5 +303,5 @@ def optimize(project: str,
 
     logger.info(f"Optimal backtest id: {optimal_backtest.backtestId}")
     logger.info(f"Optimal backtest name: {optimal_backtest.name}")
-    logger.info(f"Optimal backtest results:")
+    logger.info("Optimal backtest results:")
     logger.info(optimal_backtest.get_statistics_table())

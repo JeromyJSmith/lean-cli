@@ -27,20 +27,19 @@ class BaseCondition(ABC):
         self._pattern: str = str(condition_object["pattern"])
         self._dependent_config_id: str = condition_object["dependent-config-id"]
 
-    def factory(condition_object: Dict[str, str]) -> 'BaseCondition':
+    def factory(self) -> 'BaseCondition':
         """Creates an instance of the child classes.
 
         :param condition_object: the json object dict with condition info
         :raises ValueError: When the wrong condition type is provided
         :return: An instance of BaseCondition
         """
-        if condition_object["type"] == "regex":
-            return RegexCondition(condition_object)
-        elif condition_object["type"] == "exact-match":
-            return ExactMatchCondition(condition_object)
+        if self["type"] == "regex":
+            return RegexCondition(self)
+        elif self["type"] == "exact-match":
+            return ExactMatchCondition(self)
         else:
-            raise ValueError(
-                f'Undefined condition type {condition_object["type"]}')
+            raise ValueError(f'Undefined condition type {self["type"]}')
 
     @abstractmethod
     def check(self, target_value: str) -> bool:
@@ -107,7 +106,7 @@ class Configuration(ABC):
         else:
             self._filter = Filter([])
 
-    def factory(config_json_object) -> 'Configuration':
+    def factory(self) -> 'Configuration':
         """Creates an instance of the child classes.
 
         :param config_json_object: the json object dict with configuration info
@@ -115,17 +114,16 @@ class Configuration(ABC):
         :return: An instance of Configuration.
         """
 
-        if config_json_object["type"] in ["info", "configurations-env"]:
-            return InfoConfiguration.factory(config_json_object)
-        elif config_json_object["type"] in ["input", "internal-input"]:
-            return UserInputConfiguration.factory(config_json_object)
-        elif config_json_object["type"] == "filter-env":
-            return BrokerageEnvConfiguration.factory(config_json_object)
-        elif config_json_object["type"] == "trading-env":
-            return TradingEnvConfiguration.factory(config_json_object)
+        if self["type"] in ["info", "configurations-env"]:
+            return InfoConfiguration.factory(self)
+        elif self["type"] in ["input", "internal-input"]:
+            return UserInputConfiguration.factory(self)
+        elif self["type"] == "filter-env":
+            return BrokerageEnvConfiguration.factory(self)
+        elif self["type"] == "trading-env":
+            return TradingEnvConfiguration.factory(self)
         else:
-            raise ValueError(
-                f'Undefined input method type {config_json_object["type"]}')
+            raise ValueError(f'Undefined input method type {self["type"]}')
 
 
 class Filter():
@@ -148,16 +146,16 @@ class InfoConfiguration(Configuration):
         super().__init__(config_json_object)
         self._is_required_from_user = False
 
-    def factory(config_json_object) -> 'InfoConfiguration':
+    def factory(self) -> 'InfoConfiguration':
         """Creates an instance of the child classes.
 
         :param config_json_object: the json object dict with configuration info
         :return: An instance of InfoConfiguration.
         """
-        if config_json_object["type"] == "configurations-env":
-            return ConfigurationsEnvConfiguration(config_json_object)
+        if self["type"] == "configurations-env":
+            return ConfigurationsEnvConfiguration(self)
         else:
-            return InfoConfiguration(config_json_object)
+            return InfoConfiguration(self)
 
 
 class ConfigurationsEnvConfiguration(InfoConfiguration):
@@ -212,25 +210,25 @@ class UserInputConfiguration(Configuration, ABC):
         """
         return NotImplemented()
 
-    def factory(config_json_object) -> 'UserInputConfiguration':
+    def factory(self) -> 'UserInputConfiguration':
         """Creates an instance of the child classes.
 
         :param config_json_object: the json object dict with configuration info
         :return: An instance of UserInputConfiguration.
         """
         # NOTE: Check "Type" before "Input-method"
-        if config_json_object["type"] == "internal-input":
-            return InternalInputUserInput(config_json_object)
-        if config_json_object["input-method"] == "prompt":
-            return PromptUserInput(config_json_object)
-        elif config_json_object["input-method"] == "choice":
-            return ChoiceUserInput(config_json_object)
-        elif config_json_object["input-method"] == "confirm":
-            return ConfirmUserInput(config_json_object)
-        elif config_json_object["input-method"] == "prompt-password":
-            return PromptPasswordUserInput(config_json_object)
-        elif config_json_object["input-method"] == "path-parameter":
-            return PathParameterUserInput(config_json_object)
+        if self["type"] == "internal-input":
+            return InternalInputUserInput(self)
+        if self["input-method"] == "prompt":
+            return PromptUserInput(self)
+        elif self["input-method"] == "choice":
+            return ChoiceUserInput(self)
+        elif self["input-method"] == "confirm":
+            return ConfirmUserInput(self)
+        elif self["input-method"] == "prompt-password":
+            return PromptPasswordUserInput(self)
+        elif self["input-method"] == "path-parameter":
+            return PathParameterUserInput(self)
 
 
 class InternalInputUserInput(UserInputConfiguration):
@@ -331,12 +329,11 @@ class PathParameterUserInput(UserInputConfiguration):
             default_binary = Path(self._input_default)
         else:
             default_binary = ""
-        value = prompt(self._prompt_info,
-                             default=default_binary,
-                             type=PathParameter(
-                                 exists=False, file_okay=True, dir_okay=False)
-                             )
-        return value
+        return prompt(
+            self._prompt_info,
+            default=default_binary,
+            type=PathParameter(exists=False, file_okay=True, dir_okay=False),
+        )
 
 
 class ConfirmUserInput(UserInputConfiguration):
@@ -377,17 +374,16 @@ class BrokerageEnvConfiguration(PromptUserInput, ChoiceUserInput, ConfirmUserInp
     def __init__(self, config_json_object):
         super().__init__(config_json_object)
 
-    def factory(config_json_object) -> 'BrokerageEnvConfiguration':
+    def factory(self) -> 'BrokerageEnvConfiguration':
         """Creates an instance of the child classes.
 
         :param config_json_object: the json object dict with configuration info
         :return: An instance of BrokerageEnvConfiguration
         """
-        if config_json_object["type"] == "filter-env":
-            return FilterEnvConfiguration(config_json_object)
+        if self["type"] == "filter-env":
+            return FilterEnvConfiguration(self)
         else:
-            raise ValueError(
-                f'Undefined input method type {config_json_object["type"]}')
+            raise ValueError(f'Undefined input method type {self["type"]}')
 
     def ask_user_for_input(self, default_value, logger: Logger, hide_input: bool = False):
         """Prompts user to provide input while validating the type of input
@@ -417,17 +413,16 @@ class TradingEnvConfiguration(PromptUserInput, ChoiceUserInput, ConfirmUserInput
     def __init__(self, config_json_object):
         super().__init__(config_json_object)
 
-    def factory(config_json_object) -> 'TradingEnvConfiguration':
+    def factory(self) -> 'TradingEnvConfiguration':
         """Creates an instance of the child classes.
 
         :param config_json_object: the json object dict with configuration info
         :return: An instance of TradingEnvConfiguration.
         """
-        if config_json_object["type"] == "trading-env":
-            return TradingEnvConfiguration(config_json_object)
+        if self["type"] == "trading-env":
+            return TradingEnvConfiguration(self)
         else:
-            raise ValueError(
-                f'Undefined input method type {config_json_object["type"]}')
+            raise ValueError(f'Undefined input method type {self["type"]}')
 
     def ask_user_for_input(self, default_value, logger: Logger, hide_input: bool = False):
         """Prompts user to provide input while validating the type of input

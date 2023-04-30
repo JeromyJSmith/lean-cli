@@ -29,7 +29,7 @@ def read(relative_path: str) -> str:
 def get_version() -> str:
     version_file = read("lean/__init__.py")
     version_match = re.search(r"^__version__ = \"([^\"]+)\"", version_file, re.M)
-    return version_match.group(1)
+    return version_match[1]
 
 
 def get_stubs_version_range() -> str:

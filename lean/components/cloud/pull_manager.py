@@ -165,8 +165,9 @@ class PullManager:
         # rename project on disk if we find a directory with the old name (invalid/renamed name)
         # only check for old directory if expected directory does not exist
         if not local_project_path.exists():
-            project_path_on_disk = self._project_manager.try_get_project_path_by_cloud_id(project.projectId)
-            if project_path_on_disk:
+            if project_path_on_disk := self._project_manager.try_get_project_path_by_cloud_id(
+                project.projectId
+            ):
                 project_name_on_disk = project_path_on_disk.relative_to(Path.cwd()).as_posix()
                 if project_name_on_disk != project.name:
                     self._project_manager.rename_project_and_contents(project_path_on_disk, Path.cwd() / project.name)
@@ -208,10 +209,13 @@ class PullManager:
             local_file_path = local_project_path / cloud_file.name
 
             # Skip if the local file already exists with the correct content
-            if local_file_path.exists():
-                if local_file_path.read_text(encoding="utf-8").strip() == cloud_file.content.strip():
-                    self._project_manager.update_last_modified_time(local_file_path, cloud_file.modified)
-                    continue
+            if (
+                local_file_path.exists()
+                and local_file_path.read_text(encoding="utf-8").strip()
+                == cloud_file.content.strip()
+            ):
+                self._project_manager.update_last_modified_time(local_file_path, cloud_file.modified)
+                continue
 
             local_file_path.parent.mkdir(parents=True, exist_ok=True)
             with local_file_path.open("w+", encoding="utf-8") as local_file:
@@ -227,7 +231,7 @@ class PullManager:
         self._project_manager.update_last_modified_time(local_project_path, project.modified)
 
     def _add_local_library_references_to_project(self, project_dir: Path, cloud_libraries_paths: List[Path]) -> None:
-        if len(cloud_libraries_paths) > 0:
+        if cloud_libraries_paths:
             self._logger.info(f"Adding/updating local library references to project {project_dir.name}")
 
         for i, library_dir in enumerate(cloud_libraries_paths, start=1):
@@ -247,7 +251,7 @@ class PullManager:
                                for library_reference in local_libraries
                                if Path(library_reference["path"]) not in cloud_library_relative_paths]
 
-        if len(libraries_to_remove) > 0:
+        if libraries_to_remove:
             self._logger.info(f"Removing local library references from project {project_dir.name}")
 
         for i, library_reference in enumerate(libraries_to_remove, start=1):

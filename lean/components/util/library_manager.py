@@ -153,10 +153,9 @@ class LibraryManager:
         :param library_dir: Path to the library directory
         :param no_local: Whether restoring the packages locally must be skipped
         """
-        already_added = self.add_lean_library_reference_to_project(project_dir, library_dir)
-        # If the library was already referenced by the project,
-        # do not proceed further with adding it to the .csproj file
-        if already_added:
+        if already_added := self.add_lean_library_reference_to_project(
+            project_dir, library_dir
+        ):
             self._logger.info(f"Library {library_dir.name} has already been added to the project {project_dir.name}")
             return
 

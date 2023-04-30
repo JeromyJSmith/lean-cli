@@ -91,18 +91,17 @@ def _compile() -> Dict[str, Any]:
     """
     from sys import argv
 
-    message = {
-        "result": False,
-        "algorithmType": "",
-    }
-
     project_dir = Path(argv[-1])
     if not project_dir.exists():
         raise(f"Project directory {project_dir} does not exist")
 
     algorithm_file = project_manager.find_algorithm_file(project_dir)
-    message["algorithmType"] = "python" if algorithm_file.name.endswith(".py") else "csharp"
-
+    message = {
+        "result": False,
+        "algorithmType": "python"
+        if algorithm_file.name.endswith(".py")
+        else "csharp",
+    }
     # The dict containing all options passed to `docker run`
     # See all available options at https://docker-py.readthedocs.io/en/stable/containers.html
     run_options: Dict[str, Any] = {
@@ -134,9 +133,7 @@ def _parse_csharp_errors(csharp_output: str, color_coding_required: bool, warnin
                     errors.append(f'{bcolors.FAIL}{match[3]} File: {match[0].split("/")[-1]} Line {match[1]} Column {match[2]} - {match[5]}{bcolors.ENDC}\n')
                 elif warning_required:
                     errors.append(f'{bcolors.WARNING}{match[3]}: {match[0].split("/")[-1]} Line {match[1]} Column {match[2]} - {match[5]}{bcolors.ENDC}\n')
-            else:
-                if match[3] == "warning" and not warning_required:
-                    continue
+            elif match[3] != "warning" or warning_required:
                 errors.append(f'{match[3]}: {match[0].split("/")[-1]} Line {match[1]} Column {match[2]} - {match[5]}\n')
     except Exception:
         pass

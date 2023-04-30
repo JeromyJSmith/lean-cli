@@ -42,7 +42,11 @@ def _assert_library_reference_was_removed_from_project_config_file(project_dir: 
     project_config = container.project_config_manager.get_project_config(project_dir)
     project_libraries = project_config.get("libraries")
 
-    assert len([library for library in project_libraries if LeanLibraryReference(**library).path == library_dir]) == 0
+    assert not [
+        library
+        for library in project_libraries
+        if LeanLibraryReference(**library).path == library_dir
+    ]
 
 
 def _assert_csharp_project_csproj_file_has_library_reference(project_dir: Path, library_dir: Path) -> None:
@@ -55,8 +59,10 @@ def _assert_csharp_project_csproj_file_has_library_reference(project_dir: Path, 
     library_language = library_config.get("algorithm-language")
 
     if library_language == "Python":
-        assert not any(str(library_dir) in project_reference.get("Include")
-                       for project_reference in csproj_tree.findall('.//ProjectReference'))
+        assert all(
+            str(library_dir) not in project_reference.get("Include")
+            for project_reference in csproj_tree.findall('.//ProjectReference')
+        )
     else:
         library_reference = container.library_manager.get_csharp_lean_library_path_for_csproj_file(project_dir,
                                                                                                      library_dir)
@@ -95,13 +101,17 @@ def _assert_library_reference_was_removed_from_csharp_project_csproj_file(projec
     library_language = library_config.get("algorithm-language")
 
     if library_language == "Python":
-        assert not any(str(library_dir) in project_reference.get("Include")
-                       for project_reference in csproj_tree.findall('.//ProjectReference'))
+        assert all(
+            str(library_dir) not in project_reference.get("Include")
+            for project_reference in csproj_tree.findall('.//ProjectReference')
+        )
     else:
         library_reference = container.library_manager.get_csharp_lean_library_path_for_csproj_file(project_dir,
                                                                                                      library_dir)
-        assert not any(project_reference.get("Include") == library_reference
-                       for project_reference in csproj_tree.findall('.//ProjectReference'))
+        assert all(
+            project_reference.get("Include") != library_reference
+            for project_reference in csproj_tree.findall('.//ProjectReference')
+        )
 
 
 def test_remove_library_reference_from_python_project() -> None:

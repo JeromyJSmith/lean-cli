@@ -17,6 +17,4 @@ from json import JSONEncoder
 
 class DecimalEncoder(JSONEncoder):
   def default(self, obj):
-    if isinstance(obj, Decimal):
-      return str(obj)
-    return JSONEncoder.default(self, obj)
+    return str(obj) if isinstance(obj, Decimal) else JSONEncoder.default(self, obj)

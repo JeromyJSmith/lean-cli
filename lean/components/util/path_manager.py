@@ -75,7 +75,10 @@ class PathManager:
                 return False
 
             for reserved_name in reserved_names:
-                if component.upper() == reserved_name or component.upper().startswith(reserved_name + "."):
+                if (
+                    component.upper() == reserved_name
+                    or component.upper().startswith(f"{reserved_name}.")
+                ):
                     return False
 
             for forbidden_character in forbidden_characters:

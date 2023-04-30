@@ -28,10 +28,10 @@ def stop(project: str) -> None:
 
     cloud_project_manager = container.cloud_project_manager
     cloud_project = cloud_project_manager.get_cloud_project(project, False)
-    logger.info(f"cloud.live.stop(): sending command.")
+    logger.info("cloud.live.stop(): sending command.")
     response = api_client.live.stop(cloud_project.projectId)
     if response.success:
-        logger.info(f"cloud.live.stop(): command executed successfully.")
+        logger.info("cloud.live.stop(): command executed successfully.")
     else:
         raise Exception("cloud.live.stop(): Failed: to execute the command successfully.")
 

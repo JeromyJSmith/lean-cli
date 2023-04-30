@@ -32,10 +32,7 @@ def test_create_temporary_directory_creates_new_directory_every_time() -> None:
 def test_delete_temporary_directories_deletes_all_previously_created_directories() -> None:
     temp_manager = TempManager()
 
-    paths = []
-    for i in range(5):
-        paths.append(temp_manager.create_temporary_directory())
-
+    paths = [temp_manager.create_temporary_directory() for _ in range(5)]
     for path in paths:
         assert path.is_dir()
 

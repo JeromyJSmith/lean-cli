@@ -75,9 +75,15 @@ class LeanConfigConfigurer(JsonModule, ABC):
                             value = option._value
                             break
                     if not value:
-                        options_to_log = set([(opt._condition._dependent_config_id,
-                                               self.get_config_value_from_name(opt._condition._dependent_config_id))
-                                              for opt in configuration._value_options])
+                        options_to_log = {
+                            (
+                                opt._condition._dependent_config_id,
+                                self.get_config_value_from_name(
+                                    opt._condition._dependent_config_id
+                                ),
+                            )
+                            for opt in configuration._value_options
+                        }
                         raise ValueError(
                             f'No condition matched among present options for "{configuration._cloud_id}". '
                             f'Please review ' +
@@ -87,7 +93,7 @@ class LeanConfigConfigurer(JsonModule, ABC):
             else:
                 value = configuration._value
             from pathlib import WindowsPath, PosixPath
-            if type(value) == WindowsPath or type(value) == PosixPath:
+            if type(value) in [WindowsPath, PosixPath]:
                 value = str(value).replace("\\", "/")
             lean_config[configuration._id] = value
         container.logger.debug(f"LeanConfigConfigurer.ensure_module_installed(): _save_properties for module {self._id}: {self.get_persistent_save_properties()}")
@@ -100,7 +106,7 @@ class LeanConfigConfigurer(JsonModule, ABC):
                 self._product_id, organization_id)
             self._is_module_installed = True
 
-    def _get_default(cls, lean_config: Dict[str, Any], key: str) -> Optional[Any]:
+    def _get_default(self, lean_config: Dict[str, Any], key: str) -> Optional[Any]:
         """Returns the default value for a property based on the current Lean configuration.
 
         :param lean_config: the current Lean configuration

@@ -73,9 +73,7 @@ def _get_latest_backtest_runtime(algorithm_directory: Path) -> timedelta:
               is_flag=True,
               default=False,
               help="Run the optimization in a detached Docker container and return immediately")
-@option("--optimizer-config",
-              type=PathParameter(exists=True, file_okay=True, dir_okay=False),
-              help=f"The optimizer configuration file that should be used")
+@option("--optimizer-config", type=PathParameter(exists=True, file_okay=True, dir_okay=False), help="The optimizer configuration file that should be used")
 @option("--strategy",
               type=Choice(["Grid Search", "Euler Search"], case_sensitive=False),
               help="The optimization strategy to use")
@@ -220,7 +218,7 @@ def optimize(project: Path,
         project_config = project_config_manager.get_project_config(algorithm_file.parent)
         project_parameters = [QCParameter(key=k, value=v) for k, v in project_config.get("parameters", {}).items()]
 
-        if len(project_parameters) == 0:
+        if not project_parameters:
             raise MoreInfoError("The given project has no parameters to optimize",
                                 "https://www.lean.io/docs/v2/lean-cli/optimization/parameters")
 
@@ -356,7 +354,7 @@ def optimize(project: Path,
                                               statistics=optimal_results["Statistics"])
 
                 logger.info(f"Optimal parameters: {optimal_parameters.replace(':', ': ').replace(',', ', ')}")
-                logger.info(f"Optimal backtest results:")
+                logger.info("Optimal backtest results:")
                 logger.info(optimal_backtest.get_statistics_table())
 
             logger.info(

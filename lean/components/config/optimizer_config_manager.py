@@ -209,12 +209,10 @@ class OptimizerConfigManager:
         :param parameters: the parameters given by the user
         :return: the parameters the user gave as OptimizationParameter objects
         """
-        parsed_parameters = []
-
-        for name, minimum, maximum, step in parameters:
-            parsed_parameters.append(OptimizationParameter(name=name, min=minimum, max=maximum, step=step))
-
-        return parsed_parameters
+        return [
+            OptimizationParameter(name=name, min=minimum, max=maximum, step=step)
+            for name, minimum, maximum, step in parameters
+        ]
 
     def parse_constraints(self, constraints: List[str]) -> List[OptimizationConstraint]:
         """Parses a list of constraints given by the user into a list of constraint objects.

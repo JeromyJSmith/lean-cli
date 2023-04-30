@@ -25,7 +25,7 @@ def _get_project_directories() -> List[Path]:
     directories_to_check = [container.lean_config_manager.get_cli_root_directory()]
     project_directories = []
 
-    while len(directories_to_check) > 0:
+    while directories_to_check:
         directory = directories_to_check.pop(0)
 
         config_file = directory / PROJECT_CONFIG_FILE_NAME

@@ -38,29 +38,41 @@ class CloudBrokerage(JsonModule):
             if not config._cloud_id:
                 continue
             # TODO: handle cases where tranding env config is not present, environment will still be required.
-            if type(config) == TradingEnvConfiguration:
-                value = "paper" if str(config).lower() in [
-                    "practice", "demo", "beta", "paper"] else "live"
-            elif type(config) is InternalInputUserInput:
-                if not config._is_conditional:
-                    value = config._value
-                else:
-                    for option in config._value_options:
-                        if option._condition.check(self.get_config_value_from_name(option._condition._dependent_config_id)):
-                            value = option._value
-                            break
-                    if not value:
-                        options_to_log = set([(opt._condition._dependent_config_id,
-                                               self.get_config_value_from_name(opt._condition._dependent_config_id))
-                                              for opt in config._value_options])
-                        raise ValueError(
-                            f'No condition matched among present options for "{config._cloud_id}". '
-                            f'Please review ' +
-                            ', '.join([f'"{x[0]}"' for x in options_to_log]) +
-                            f' given value{"s" if len(options_to_log) > 1 else ""} ' +
-                            ', '.join([f'"{x[1]}"' for x in options_to_log]))
-            else:
+            if (
+                type(config) != TradingEnvConfiguration
+                and type(config) is InternalInputUserInput
+                and not config._is_conditional
+                or type(config) != TradingEnvConfiguration
+                and type(config) is not InternalInputUserInput
+            ):
                 value = config._value
+            elif type(config) != TradingEnvConfiguration:
+                for option in config._value_options:
+                    if option._condition.check(self.get_config_value_from_name(option._condition._dependent_config_id)):
+                        value = option._value
+                        break
+                if not value:
+                    options_to_log = {
+                        (
+                            opt._condition._dependent_config_id,
+                            self.get_config_value_from_name(
+                                opt._condition._dependent_config_id
+                            ),
+                        )
+                        for opt in config._value_options
+                    }
+                    raise ValueError(
+                        f'No condition matched among present options for "{config._cloud_id}". '
+                        f'Please review ' +
+                        ', '.join([f'"{x[0]}"' for x in options_to_log]) +
+                        f' given value{"s" if len(options_to_log) > 1 else ""} ' +
+                        ', '.join([f'"{x[1]}"' for x in options_to_log]))
+            else:
+                value = (
+                    "paper"
+                    if str(config).lower() in {"practice", "demo", "beta", "paper"}
+                    else "live"
+                )
             settings[config._cloud_id] = value
         return settings
 

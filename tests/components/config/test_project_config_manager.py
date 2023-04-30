@@ -44,10 +44,10 @@ def test_get_local_id_returns_same_id_for_project_when_called_multiple_times() -
 
     project_config_manager = ProjectConfigManager(XMLManager())
 
-    ids = []
-    for _ in range(5):
-        ids.append(project_config_manager.get_local_id(Path.cwd() / "Python Project"))
-
+    ids = [
+        project_config_manager.get_local_id(Path.cwd() / "Python Project")
+        for _ in range(5)
+    ]
     assert len(set(ids)) == 1
 
 

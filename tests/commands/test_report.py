@@ -149,7 +149,10 @@ def test_report_mounts_report_config() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([mount["Target"] == "/Lean/Report/bin/Debug/config.json" for mount in kwargs["mounts"]])
+    assert any(
+        mount["Target"] == "/Lean/Report/bin/Debug/config.json"
+        for mount in kwargs["mounts"]
+    )
 
 
 def test_report_mounts_data_directory() -> None:
@@ -166,7 +169,9 @@ def test_report_mounts_data_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Lean/Data")
     assert key == str(Path.cwd() / "data")
@@ -186,7 +191,9 @@ def test_report_mounts_output_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Output" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Output" for volume in kwargs["volumes"].values()
+    )
 
 
 def test_report_mounts_given_backtest_data_source_file() -> None:

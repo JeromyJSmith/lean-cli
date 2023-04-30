@@ -86,7 +86,7 @@ def _raise_for_missing_properties(lean_config: Dict[str, Any], environment_name:
     required_properties = list(set(brokerage_properties + data_queue_handler_properties))
     missing_properties = [p for p in required_properties if p not in lean_config or lean_config[p] == ""]
     missing_properties = set(missing_properties)
-    if len(missing_properties) == 0:
+    if not missing_properties:
         return
 
     properties_str = "properties" if len(missing_properties) > 1 else "property"
@@ -166,12 +166,12 @@ def _configure_lean_config_interactively(lean_config: Dict[str, Any],
             # update essential properties, so that other dependent values can be fetched.
             essential_properties_value = {brokerage.convert_lean_key_to_variable(config._id): config._value
                                           for config in brokerage.get_essential_configs()}
-            properties.update(essential_properties_value)
+            properties |= essential_properties_value
             logger.debug(f"live.deploy._configure_lean_config_interactively(): essential_properties_value: {brokerage._id} {essential_properties_value}")
             # now required properties can be fetched as per data/filter provider from essential properties
             required_properties_value = {brokerage.convert_lean_key_to_variable(config._id): config._value
                                          for config in brokerage.get_required_configs([InternalInputUserInput])}
-            properties.update(required_properties_value)
+            properties |= required_properties_value
             logger.debug(f"live.deploy._configure_lean_config_interactively(): required_properties_value: {required_properties_value}")
         data_feed.build(lean_config, logger, properties, hide_input=not show_secrets).configure(lean_config, environment_name)
 
@@ -194,10 +194,7 @@ def _get_default_value(key: str) -> Optional[Any]:
         return None
 
     value = _cached_lean_config[key]
-    if value == "":
-        return None
-
-    return value
+    return None if value == "" else value
 
 
 @live.command(cls=LeanCommand, requires_lean_config=True, requires_docker=True, default_command=True, name="deploy")
@@ -231,17 +228,9 @@ def _get_default_value(key: str) -> Optional[Any]:
 @option("--image",
               type=str,
               help=f"The LEAN engine image to use (defaults to {DEFAULT_ENGINE_IMAGE})")
-@option("--python-venv",
-              type=str,
-              help=f"The path of the python virtual environment to be used")
-@option("--live-cash-balance",
-              type=str,
-              default="",
-              help=f"A comma-separated list of currency:amount pairs of initial cash balance")
-@option("--live-holdings",
-              type=str,
-              default="",
-              help=f"A comma-separated list of symbol:symbolId:quantity:averagePrice of initial portfolio holdings")
+@option("--python-venv", type=str, help="The path of the python virtual environment to be used")
+@option("--live-cash-balance", type=str, default="", help="A comma-separated list of currency:amount pairs of initial cash balance")
+@option("--live-holdings", type=str, default="", help="A comma-separated list of symbol:symbolId:quantity:averagePrice of initial portfolio holdings")
 @option("--update",
               is_flag=True,
               default=False,

@@ -61,9 +61,7 @@ class DataDownloader:
 
                 self._lean_config_manager.set_properties({"file-database-last-update": now.strftime('%m/%d/%Y')})
         except MoreInfoError as e:
-            if "not found" in str(e):
-                pass
-            else:
+            if "not found" not in str(e):
                 self._logger.error(str(e))
         except Exception as e:
             self._logger.error(str(e))
@@ -107,10 +105,9 @@ class DataDownloader:
 
     def _process_bulk(self, file: Path, destination: Path):
         from tarfile import open
-        tar = open(file)
-        tar.errorlevel = 0
-        tar.extractall(destination)
-        tar.close()
+        with open(file) as tar:
+            tar.errorlevel = 0
+            tar.extractall(destination)
         from os import remove
         remove(file)
 
@@ -143,7 +140,7 @@ class DataDownloader:
         if is_bulk:
             # for bulk, we will download to a temporary folder and delete it at the end
             import tempfile
-            local_path = tempfile.gettempdir() + "/" + relative_file
+            local_path = f"{tempfile.gettempdir()}/{relative_file}"
             canary_path = Path(self.remove_suffix(str(data_directory / relative_file), ".tar") + ".log")
 
         if canary_path.exists() and not overwrite:

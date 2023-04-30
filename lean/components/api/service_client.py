@@ -34,7 +34,8 @@ class ServiceClient:
         """
         data = self._api.post("services/terminal-news")
 
-        if not data["news"]:
-            return []
-
-        return [QCTerminalNewsItem(**item) for item in data["news"]]
+        return (
+            [QCTerminalNewsItem(**item) for item in data["news"]]
+            if data["news"]
+            else []
+        )

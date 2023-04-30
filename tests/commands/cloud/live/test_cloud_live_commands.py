@@ -135,6 +135,9 @@ def test_cloud_live_deploy_with_notifications(notice_method: str, configs: str) 
             address, subject = config.split(":")
             notification.append(QCEmailNotificationMethod(address=address, subject=subject))
 
+        elif notice_method == "sms":
+            notification.append(QCSMSNotificationMethod(phoneNumber=config))
+
         elif notice_method == "webhooks":
             address, headers = config.split(":", 1)
             headers_dict = {}
@@ -145,18 +148,15 @@ def test_cloud_live_deploy_with_notifications(notice_method: str, configs: str) 
 
             notification.append(QCWebhookNotificationMethod(address=address, headers=headers_dict))
 
-        elif notice_method == "sms":
-            notification.append(QCSMSNotificationMethod(phoneNumber=config))
-
         else:
             id_token_pair = config.split(":", 1)
 
             if len(id_token_pair) == 2:
                 chat_id, token = id_token_pair
-                if not token:
-                    notification.append(QCTelegramNotificationMethod(id=chat_id))
-                else:
+                if token:
                     notification.append(QCTelegramNotificationMethod(id=chat_id, token=token))
+                else:
+                    notification.append(QCTelegramNotificationMethod(id=chat_id))
             else:
                 notification.append(QCTelegramNotificationMethod(id=id_token_pair[0]))
 

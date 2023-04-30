@@ -15,12 +15,11 @@ from typing import List
 from lean.models.data_providers.data_provider import DataProvider
 from lean.models import json_modules
 
-all_data_providers: List[DataProvider] = []
-
-for json_module in json_modules:
-    if "data-provider" in json_module["type"]:
-        all_data_providers.append(DataProvider(json_module))
-
+all_data_providers: List[DataProvider] = [
+    DataProvider(json_module)
+    for json_module in json_modules
+    if "data-provider" in json_module["type"]
+]
 # QuantConnect DataProvider
 [QuantConnectDataProvider] = [
     data_provider for data_provider in all_data_providers if data_provider._id == "QuantConnect"]

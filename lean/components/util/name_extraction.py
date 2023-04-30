@@ -19,9 +19,7 @@ def _capitalize(word: str) -> str:
     :param word: the word to capitalize
     :return: the word with the first letter capitalized (any other uppercase characters are preserved)
     """
-    if word == "":
-        return word
-    return word[0].upper() + word[1:]
+    return word[0].upper() + word[1:] if word else word
 
 
 def convert_to_class_name(file_path: Path):
@@ -31,4 +29,8 @@ def convert_to_class_name(file_path: Path):
     :return: returns a valid class name
     """
     from re import sub
-    return sub(f"[^a-zA-Z0-9]", "", "".join(map(_capitalize, file_path.name.split(" "))))
+    return sub(
+        "[^a-zA-Z0-9]",
+        "",
+        "".join(map(_capitalize, file_path.name.split(" "))),
+    )

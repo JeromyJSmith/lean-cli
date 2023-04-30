@@ -46,7 +46,7 @@ class DockerManager:
         from shutil import which
         from subprocess import run
 
-        if image.name == CUSTOM_RESEARCH or image.name == CUSTOM_ENGINE or image.name == CUSTOM_FOUNDATION:
+        if image.name in [CUSTOM_RESEARCH, CUSTOM_ENGINE, CUSTOM_FOUNDATION]:
             self._logger.info(f"Skip pulling local image {image}...")
             return
 
@@ -317,10 +317,7 @@ class DockerManager:
         img = self._get_docker_client().images.get(str(image))
 
         repo_digests = img.attrs["RepoDigests"]
-        if len(repo_digests) == 0:
-            return None
-
-        return repo_digests[0].split("@")[1]
+        return None if len(repo_digests) == 0 else repo_digests[0].split("@")[1]
 
     def get_remote_digest(self, image: DockerImage) -> str:
         """Returns the digest of a remote image.
@@ -337,7 +334,7 @@ class DockerManager:
         :param name: the name of then network to create
         """
         docker_client = self._get_docker_client()
-        if not any(n.name == name for n in docker_client.networks.list()):
+        if all(n.name != name for n in docker_client.networks.list()):
             docker_client.networks.create(name, driver="bridge")
 
     def create_volume(self, name: str) -> None:
@@ -346,7 +343,7 @@ class DockerManager:
         :param name: the name of the volume to create
         """
         docker_client = self._get_docker_client()
-        if not any(v.name == name for v in docker_client.volumes.list()):
+        if all(v.name != name for v in docker_client.volumes.list()):
             docker_client.volumes.create(name)
 
     def create_site_packages_volume(self, requirements_file: Path) -> str:
@@ -391,11 +388,16 @@ class DockerManager:
         :param container_name: the name of the container to find
         :return: the container with the given name, or None if it does not exist
         """
-        for container in self._get_docker_client().containers.list(all=True):
-            if container.name.lstrip("/") == container_name:
-                return container
-
-        return None
+        return next(
+            (
+                container
+                for container in self._get_docker_client().containers.list(
+                    all=True
+                )
+                if container.name.lstrip("/") == container_name
+            ),
+            None,
+        )
 
     def show_logs(self, container_name: str, follow: bool = False) -> None:
         """Shows the logs of a Docker container in the terminal.
@@ -576,7 +578,7 @@ class DockerManager:
 
         # In case a port is supplied without a protocol assume tcp
         if not internal_port.__contains__("/tcp") and not internal_port.__contains__("/udp"):
-            internal_port = str(internal_port) + "/tcp"
+            internal_port += "/tcp"
 
         container = self.get_container_by_name(container_name)
 

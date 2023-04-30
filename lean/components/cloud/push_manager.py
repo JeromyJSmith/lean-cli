@@ -62,7 +62,7 @@ class PushManager:
 
         :param projects_to_push: a list of directories containing the local projects that need to be pushed
         """
-        if len(projects_to_push) == 0:
+        if not projects_to_push:
             return
 
         organization_id = self._organization_manager.try_get_working_organization_id()
@@ -83,10 +83,14 @@ class PushManager:
         libraries_in_config = project_config.get("libraries", [])
         library_paths = [LeanLibraryReference(**library).path.expanduser().resolve() for library in libraries_in_config]
 
-        local_libraries_cloud_ids = [int(self._project_config_manager.get_project_config(path).get("cloud-id", None))
-                                     for path in library_paths]
-
-        return local_libraries_cloud_ids
+        return [
+            int(
+                self._project_config_manager.get_project_config(path).get(
+                    "cloud-id", None
+                )
+            )
+            for path in library_paths
+        ]
 
     def _push_project(self, project_path: Path, organization_id: str, suggested_rename_path: Path = None) -> None:
         """Pushes a single local project to the cloud.
@@ -191,12 +195,9 @@ class PushManager:
         local_lean_venv = project_config.get("python-venv", None)
         cloud_lean_venv = cloud_project.leanEnvironment
 
-        update_args = {}
-
         expected_correct_project_name = project.relative_to(Path.cwd()).as_posix()
 
-        # update project name in cloud in case it was incorrect and renamed locally otherwise update the same name
-        update_args["name"] = expected_correct_project_name
+        update_args = {"name": expected_correct_project_name}
         if cloud_project.name != expected_correct_project_name:
             self._logger.info(f"Renaming project in cloud from '{cloud_project.name}' to '{expected_correct_project_name}'")
 

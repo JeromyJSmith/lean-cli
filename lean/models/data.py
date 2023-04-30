@@ -60,24 +60,14 @@ class DatasetOrCondition(DatasetCondition):
     options: List[DatasetCondition]
 
     def check(self, option_results: Dict[str, OptionResult]) -> bool:
-        # Check each option, if any return true then its true
-        for option in self.options:
-            if option.check(option_results):
-                return True
-
-        return False
+        return any(option.check(option_results) for option in self.options)
 
 
 class DatasetAndCondition(DatasetCondition):
     options: List[DatasetCondition]
 
     def check(self, option_results: Dict[str, OptionResult]) -> bool:
-        # Check each option, if any return false, then its false
-        for option in self.options:
-            if not option.check(option_results):
-                return False
-
-        return True
+        return all(option.check(option_results) for option in self.options)
 
 
 class DatasetOption(WrappedBaseModel, ABC):
@@ -100,7 +90,7 @@ class DatasetOption(WrappedBaseModel, ABC):
         conditionType = value["type"].lower()
 
         # Special AND/OR (Composition of conditions)
-        if conditionType == "and" or conditionType == "or" :
+        if conditionType in ["and", "or"]:
             for i in range(0, len(value["options"])):
                 option = value["options"][i]
 
@@ -158,7 +148,7 @@ class DatasetTextOption(DatasetOption):
         return self.configure_non_interactive(user_input)
 
     def configure_non_interactive(self, user_input: str) -> OptionResult:
-        if len(user_input.strip()) == 0:
+        if not user_input.strip():
             raise ValueError("Value cannot be a blank string")
 
         if self.multiple:
@@ -172,10 +162,7 @@ class DatasetTextOption(DatasetOption):
         return OptionResult(value=value, label=label)
 
     def get_placeholder(self) -> str:
-        if self.multiple:
-            return "values"
-        else:
-            return "value"
+        return "values" if self.multiple else "value"
 
 
 class DatasetSelectOption(DatasetOption):
@@ -269,7 +256,7 @@ class DatasetPath(WrappedBaseModel):
         conditionType = value["type"].lower()
 
         # Special AND/OR (Composition of conditions)
-        if conditionType == "and" or conditionType == "or" :
+        if conditionType in ["and", "or"]:
             for i in range(0, len(value["options"])):
                 option = value["options"][i]
 
@@ -300,32 +287,44 @@ class Dataset(WrappedBaseModel):
             if isinstance(option, DatasetOption):
                 options.append(option)
 
-            # TODO: This is a hack around, does not respect option conditions for start-end
             elif option["type"] == "start-end":
                 description_suffix = ""
                 required_resolutions = ["tick", "second", "minute", "minute/second/tick"]
 
                 resolution = next((o for o in options if o.id == "resolution"), None)
-                if resolution is not None and isinstance(resolution, DatasetSelectOption):
-                    if len(set(resolution.choices.values()) - set(required_resolutions)) > 0:
-                        description_suffix = " (tick, second and minute resolutions only)"
-
-                options.extend([
-                    DatasetDateOption(
-                        id="start",
-                        label="Start date",
-                        description="The inclusive end date of the data that you want to download" + description_suffix,
-                        condition=DatasetOneOfCondition(option="resolution", values=required_resolutions),
-                        start_end=True
-                    ),
-                    DatasetDateOption(
-                        id="end",
-                        label="End date",
-                        description="The inclusive end date of the data that you want to download" + description_suffix,
-                        condition=DatasetOneOfCondition(option="resolution", values=required_resolutions),
-                        start_end=True
+                if (
+                    resolution is not None
+                    and isinstance(resolution, DatasetSelectOption)
+                    and len(
+                        set(resolution.choices.values())
+                        - set(required_resolutions)
                     )
-                ])
+                    > 0
+                ):
+                    description_suffix = " (tick, second and minute resolutions only)"
+
+                options.extend(
+                    [
+                        DatasetDateOption(
+                            id="start",
+                            label="Start date",
+                            description=f"The inclusive end date of the data that you want to download{description_suffix}",
+                            condition=DatasetOneOfCondition(
+                                option="resolution", values=required_resolutions
+                            ),
+                            start_end=True,
+                        ),
+                        DatasetDateOption(
+                            id="end",
+                            label="End date",
+                            description=f"The inclusive end date of the data that you want to download{description_suffix}",
+                            condition=DatasetOneOfCondition(
+                                option="resolution", values=required_resolutions
+                            ),
+                            start_end=True,
+                        ),
+                    ]
+                )
             else:
                 options.append(option_types[option["type"]](**option))
 
@@ -359,8 +358,11 @@ class DataFileLatestGroup(DataFileGroup):
 
     def get_valid_files(self, files_with_prefix: Optional[List[str]]) -> Set[str]:
         if files_with_prefix is not None:
-            matching_files = [file for file in files_with_prefix if self.regex.match(file) is not None]
-            if len(matching_files) > 0:
+            if matching_files := [
+                file
+                for file in files_with_prefix
+                if self.regex.match(file) is not None
+            ]:
                 return {sorted(matching_files)[-1]}
 
         return set()
@@ -394,13 +396,11 @@ class Product(WrappedBaseModel):
         else:
             groups.extend(self._get_data_file_groups(variables))
 
-        prefixes = set(group.prefix for group in groups)
-        prefixes_to_files = {}
-
+        prefixes = {group.prefix for group in groups}
         parallel = Parallel(n_jobs=max(1, cpu_count() - 1), backend="threading")
-        for prefix, files_with_prefix in parallel(delayed(self._list_files)(prefix) for prefix in prefixes):
-            prefixes_to_files[prefix] = files_with_prefix
-
+        prefixes_to_files = dict(
+            parallel(delayed(self._list_files)(prefix) for prefix in prefixes)
+        )
         data_files = set()
         for group in groups:
             data_files.update(group.get_valid_files(prefixes_to_files[group.prefix]))
@@ -418,7 +418,7 @@ class Product(WrappedBaseModel):
                 path_to_use = path
                 break
         else:
-            raise RuntimeError(f"No eligible path templates found")
+            raise RuntimeError("No eligible path templates found")
 
         for template in path_to_use.templates.all:
             has_start_end = any(isinstance(o, DatasetDateOption) and o.start_end for o in self.dataset.options)

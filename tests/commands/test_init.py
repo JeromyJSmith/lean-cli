@@ -186,6 +186,9 @@ def test_init_uses_organization_given_as_option(use_name: bool) -> None:
 
     assert result.exit_code == 0
 
-    assert not any("Select the organization" in call.args[0] for call in mock_prompt_list.call_args_list)
+    assert all(
+        "Select the organization" not in call.args[0]
+        for call in mock_prompt_list.call_args_list
+    )
 
     assert_organization_id_is_in_lean_config(organization.id)

@@ -29,7 +29,7 @@ def _get_nuget_package(name: str) -> Tuple[str, str]:
     """
     from json import loads
     http_client = container.http_client
-    generic_error = RuntimeError(f"The NuGet API is not responding")
+    generic_error = RuntimeError("The NuGet API is not responding")
 
     service_index_response = http_client.get("https://api.nuget.org/v3/index.json", raise_for_status=False)
     if not service_index_response.ok:
@@ -143,7 +143,7 @@ def _get_pypi_package(name: str, version: Optional[str]) -> Tuple[str, str]:
         raise RuntimeError(f"PyPI does not have a package named {name}")
 
     if not response.ok:
-        raise RuntimeError(f"The PyPI API is not responding")
+        raise RuntimeError("The PyPI API is not responding")
 
     pypi_data = loads(response.text)
     name = pypi_data["info"]["name"]
@@ -153,13 +153,13 @@ def _get_pypi_package(name: str, version: Optional[str]) -> Tuple[str, str]:
     last_compatible_version = None
     last_compatible_version_upload_time = None
 
-    if version is not None:
-        if version not in pypi_data["releases"]:
-            raise RuntimeError(f"Version {version} of the {name} package does not exist")
-        versions_to_check = {version: pypi_data["releases"][version]}
-    else:
+    if version is None:
         versions_to_check = pypi_data["releases"]
 
+    elif version not in pypi_data["releases"]:
+        raise RuntimeError(f"Version {version} of the {name} package does not exist")
+    else:
+        versions_to_check = {version: pypi_data["releases"][version]}
     for version, files in versions_to_check.items():
         for file in files:
             if not _is_pypi_file_compatible(file, required_python_version):
@@ -212,7 +212,7 @@ def _add_python_package_to_requirements(requirements_file: Path, name: str, vers
         new_lines.append(f"{name}=={version}")
 
     new_content = "\n".join(new_lines).strip()
-    new_content = new_content + "\n" if len(new_content) > 0 else new_content
+    new_content = new_content + "\n" if new_content != "" else new_content
     requirements_file.write_text(new_content, encoding="utf-8")
 
 

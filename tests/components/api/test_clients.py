@@ -139,7 +139,7 @@ def test_projects_crud() -> None:
 
     # Test the project is really deleted
     projects = project_client.get_all()
-    assert not any([p.projectId == created_project.projectId for p in projects])
+    assert all(p.projectId != created_project.projectId for p in projects)
 
 
 def test_files_crud() -> None:
@@ -172,7 +172,7 @@ def test_files_crud() -> None:
         # Test the file is really deleted
         files = file_client.get_all(project.projectId)
 
-        assert not any([file.name == "file.py" for file in files])
+        assert all(file.name != "file.py" for file in files)
 
 
 def test_compiling() -> None:
@@ -230,11 +230,16 @@ def test_backtest_crud() -> None:
         assert retrieved_backtest.name == backtest_name
 
         # Test the backtest can be updated
-        backtest_client.update(project.projectId, created_backtest.backtestId, backtest_name + "2", "This is a note")
+        backtest_client.update(
+            project.projectId,
+            created_backtest.backtestId,
+            f"{backtest_name}2",
+            "This is a note",
+        )
         retrieved_backtest = backtest_client.get(project.projectId, created_backtest.backtestId)
 
         assert retrieved_backtest.backtestId == created_backtest.backtestId
-        assert retrieved_backtest.name == backtest_name + "2"
+        assert retrieved_backtest.name == f"{backtest_name}2"
         assert retrieved_backtest.note == "This is a note"
 
         # Test the backtest can be deleted
@@ -243,7 +248,10 @@ def test_backtest_crud() -> None:
         # Test the backtest is really deleted
         backtests = backtest_client.get_all(project.projectId)
 
-        assert not any([backtest.backtestId == created_backtest.backtestId for backtest in backtests])
+        assert all(
+            backtest.backtestId != created_backtest.backtestId
+            for backtest in backtests
+        )
 
 
 def test_live_client_get_all_parses_response() -> None:

@@ -104,9 +104,5 @@ class CLIConfigManager:
         :param default: the default image to use when the option is not set and no override is given
         :return: the image to use
         """
-        if override is not None:
-            image = override
-        else:
-            image = option.get_value(default)
-
+        image = override if override is not None else option.get_value(default)
         return DockerImage.parse(image)

@@ -15,8 +15,8 @@ from typing import List
 from lean.models.addon_modules.addon_module import AddonModule
 from lean.models import json_modules
 
-all_addon_modules: List[AddonModule] = []
-
-for json_module in json_modules:
-    if "addon-module" in json_module["type"]:
-        all_addon_modules.append(AddonModule(json_module))
+all_addon_modules: List[AddonModule] = [
+    AddonModule(json_module)
+    for json_module in json_modules
+    if "addon-module" in json_module["type"]
+]

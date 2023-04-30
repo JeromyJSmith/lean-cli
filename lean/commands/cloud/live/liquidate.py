@@ -28,9 +28,9 @@ def liquidate(project: str) -> None:
 
     cloud_project_manager = container.cloud_project_manager
     cloud_project = cloud_project_manager.get_cloud_project(project, False)
-    logger.info(f"cloud.live.liquidate(): sending command.")
+    logger.info("cloud.live.liquidate(): sending command.")
     response = api_client.live.liquidate_and_stop(cloud_project.projectId)
     if response.success:
-        logger.info(f"cloud.live.liquidate(): command executed successfully.")
+        logger.info("cloud.live.liquidate(): command executed successfully.")
     else:
         raise Exception("cloud.live.liquidate(): Failed: to execute the command successfully.")

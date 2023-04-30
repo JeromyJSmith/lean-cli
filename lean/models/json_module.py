@@ -29,17 +29,19 @@ class JsonModule(ABC):
         self._display_name: str = json_module_data["display-id"]
         self._installs: bool = json_module_data["installs"]
         self._lean_configs: List[Configuration] = []
-        for config in json_module_data["configurations"]:
-            self._lean_configs.append(Configuration.factory(config))
+        self._lean_configs.extend(
+            Configuration.factory(config)
+            for config in json_module_data["configurations"]
+        )
         self._lean_configs = self.sort_configs()
         self._is_module_installed: bool = False
         self._initial_cash_balance: LiveInitialStateInput = LiveInitialStateInput(json_module_data["live-cash-balance-state"]) \
-            if "live-cash-balance-state" in json_module_data \
-            else None
+                if "live-cash-balance-state" in json_module_data \
+                else None
         self._initial_holdings: LiveInitialStateInput = LiveInitialStateInput(json_module_data["live-holdings-state"]) \
-            if "live-holdings-state" in json_module_data \
-            else False
-        self._minimum_seat = json_module_data["minimum-seat"] if "minimum-seat" in json_module_data else None
+                if "live-holdings-state" in json_module_data \
+                else False
+        self._minimum_seat = json_module_data.get("minimum-seat", None)
 
     def sort_configs(self) -> List[Configuration]:
         sorted_configs = []
@@ -82,14 +84,16 @@ class JsonModule(ABC):
             self.update_value_for_given_config(key, value)
 
     def get_configurations_env_values_from_name(self, target_env: str) -> List[Dict[str, str]]:
-        env_config_values = []
         [env_config] = [config for config in self._lean_configs if
                         config._is_type_configurations_env and self.check_if_config_passes_filters(
                             config)
                         ] or [None]
-        if env_config is not None and target_env in env_config._env_and_values.keys():
-            env_config_values = env_config._env_and_values[target_env]
-        return env_config_values
+        return (
+            env_config._env_and_values[target_env]
+            if env_config is not None
+            and target_env in env_config._env_and_values.keys()
+            else []
+        )
 
     def get_config_from_type(self, config_type: Configuration) -> str:
         return [copy(config) for config in self._lean_configs if type(config) is config_type]
@@ -112,10 +116,13 @@ class JsonModule(ABC):
         return [config._id for config in self.get_required_configs(filters)]
 
     def get_required_configs(self, filters: List[Type[Configuration]] = []) -> List[Configuration]:
-        required_configs = [copy(config) for config in self._lean_configs if config._is_required_from_user
-                            and type(config) not in filters
-                            and self.check_if_config_passes_filters(config)]
-        return required_configs
+        return [
+            copy(config)
+            for config in self._lean_configs
+            if config._is_required_from_user
+            and type(config) not in filters
+            and self.check_if_config_passes_filters(config)
+        ]
 
     def get_persistent_save_properties(self, filters: List[Type[Configuration]] = []) -> List[str]:
         return [config._id for config in self.get_required_configs(filters) if config._save_persistently_in_lean]

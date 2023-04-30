@@ -322,18 +322,21 @@ Please remove the character '{problematic_char}' and retry""")
 
     if full_path.exists():
         raise RuntimeError(f"A project named '{name}' already exists, please choose a different name")
-    else:
-        project_manager = container.project_manager
-        project_manager.create_new_project(full_path, QCLanguage.Python if language == "python" else QCLanguage.CSharp)
+    project_manager = container.project_manager
+    project_manager.create_new_project(full_path, QCLanguage.Python if language == "python" else QCLanguage.CSharp)
 
     class_name = convert_to_class_name(full_path)
 
     if language == "python":
         main_name = "main.py"
-        main_content = DEFAULT_PYTHON_MAIN if not is_library_project else LIBRARY_PYTHON_MAIN
+        main_content = (
+            LIBRARY_PYTHON_MAIN if is_library_project else DEFAULT_PYTHON_MAIN
+        )
     else:
         main_name = "Main.cs"
-        main_content = DEFAULT_CSHARP_MAIN if not is_library_project else LIBRARY_CSHARP_MAIN
+        main_content = (
+            LIBRARY_CSHARP_MAIN if is_library_project else DEFAULT_CSHARP_MAIN
+        )
 
     with (full_path / main_name).open("w+", encoding="utf-8") as file:
         file.write(main_content.replace("$CLASS_NAME$", class_name).replace("$PROJECT_NAME$", full_path.name))

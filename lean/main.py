@@ -41,14 +41,14 @@ def _ensure_win32_available() -> None:
 
     possible_paths = path + [prefix] + getsitepackages() + [getusersitepackages()]
     possible_paths = [Path(p) for p in possible_paths]
-    possible_directories = set(p for p in possible_paths if p.is_dir())
+    possible_directories = {p for p in possible_paths if p.is_dir()}
 
     for directory in possible_directories:
         target_directory = directory / "pywin32_system32"
         if not target_directory.is_dir():
             continue
 
-        environ["PATH"] += ";" + str(target_directory)
+        environ["PATH"] += f";{str(target_directory)}"
 
         if _is_win32_available():
             return
@@ -78,7 +78,9 @@ def _ensure_win32_available() -> None:
 
     print("pywin32 has not been installed completely, which may lead to errors")
     print("You can fix this issue by running pywin32's post-install script")
-    print(f"Run the following command in an elevated terminal from your Python environment's Scripts directory:")
+    print(
+        "Run the following command in an elevated terminal from your Python environment's Scripts directory:"
+    )
     print("python pywin32_postinstall.py -install")
 
 if system() == "Windows":

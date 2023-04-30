@@ -170,7 +170,10 @@ def test_run_lean_mounts_config_file() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([mount["Target"] == f"{LEAN_ROOT_PATH}/config.json" for mount in kwargs["mounts"]])
+    assert any(
+        mount["Target"] == f"{LEAN_ROOT_PATH}/config.json"
+        for mount in kwargs["mounts"]
+    )
 
 
 def test_run_lean_mounts_data_directory() -> None:
@@ -193,7 +196,9 @@ def test_run_lean_mounts_data_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Lean/Data" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Lean/Data")
     assert key == str(Path.cwd() / "data")
@@ -219,7 +224,9 @@ def test_run_lean_mounts_output_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Results" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Results" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Results")
     assert key == str(Path.cwd() / "output")
@@ -245,7 +252,9 @@ def test_run_lean_mounts_storage_directory() -> None:
     docker_manager.run_image.assert_called_once()
     args, kwargs = docker_manager.run_image.call_args
 
-    assert any([volume["bind"] == "/Storage" for volume in kwargs["volumes"].values()])
+    assert any(
+        volume["bind"] == "/Storage" for volume in kwargs["volumes"].values()
+    )
 
     key = next(key for key in kwargs["volumes"].keys() if kwargs["volumes"][key]["bind"] == "/Storage")
     assert key == str(Path.cwd() / "Python Project" / "storage")
@@ -473,11 +482,11 @@ def test_run_lean_mounts_terminal_link_symbol_map_file_from_data_folder(os: str,
         if local_path.is_absolute() \
         else cli_root_dir / DEFAULT_DATA_DIRECTORY_NAME / "symbol-properties" / local_path
 
-    assert any([
-        Path(mount["Source"]) == expected_source and
-        mount["Target"] == f'/Files/terminal-link-symbol-map-file'
+    assert any(
+        Path(mount["Source"]) == expected_source
+        and mount["Target"] == '/Files/terminal-link-symbol-map-file'
         for mount in kwargs["mounts"]
-    ])
+    )
 
 
 def test_run_lean_mounts_transaction_log_file_from_cli_root() -> None:
@@ -503,8 +512,8 @@ def test_run_lean_mounts_transaction_log_file_from_cli_root() -> None:
     from lean.container import container
     cli_root_dir = container.lean_config_manager.get_cli_root_directory()
 
-    assert any([
-        Path(mount["Source"]) == Path(f'{cli_root_dir}/transaction-log.log') and
-        mount["Target"] == f'/Files/transaction-log'
+    assert any(
+        Path(mount["Source"]) == Path(f'{cli_root_dir}/transaction-log.log')
+        and mount["Target"] == '/Files/transaction-log'
         for mount in kwargs["mounts"]
-    ])
+    )

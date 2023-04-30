@@ -95,8 +95,11 @@ def test_get_csharp_lean_library_path_for_csproj_file(project_depth: int) -> Non
     # ('project_depth' + 1) ../ parts (to go from the project dir to the cli root dir),
     # plus 'Library/CSharp Library/CSharp Project.csproj' (2 more parts),
     # plus the csproj file name (1 more part)
-    expected_csproj_file_path = \
-        (Path("/".join(".." for i in range(project_depth + 1))) / library_dir_relative_to_cli / "CSharp Library.csproj")
+    expected_csproj_file_path = (
+        Path("/".join(".." for _ in range(project_depth + 1)))
+        / library_dir_relative_to_cli
+        / "CSharp Library.csproj"
+    )
     assert Path(csproj_file_path) == expected_csproj_file_path
 
 

@@ -33,11 +33,11 @@ def login(user_id: Optional[str], api_token: Optional[str], show_secrets: bool) 
     Credentials are stored in ~/.lean/credentials and are removed upon running `lean logout`.
     """
     logger = container.logger
-    credentials_storage = container.credentials_storage
-
     if user_id is None or api_token is None:
         logger.info("Your user id and API token are needed to make authenticated requests to the QuantConnect API")
         logger.info("You can request these credentials on https://www.quantconnect.com/account")
+        credentials_storage = container.credentials_storage
+
         logger.info(f"Both will be saved in {credentials_storage.file}")
 
     if user_id is None:

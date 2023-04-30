@@ -26,10 +26,7 @@ from lean.container import container
               type=DateParameter(),
               required=True,
               help="Start date for the data to generate in yyyyMMdd format")
-@option("--end",
-              type=DateParameter(),
-              default=datetime.today().strftime("%Y%m%d"),
-              help="End date for the data to generate in yyyyMMdd format (defaults to today)")
+@option("--end", type=DateParameter(), default=datetime.now().strftime("%Y%m%d"), help="End date for the data to generate in yyyyMMdd format (defaults to today)")
 @option("--symbol-count",
               type=IntRange(min=0),
               required=True,
@@ -126,7 +123,7 @@ def generate(start: datetime,
 
     # Toolbox uses '--opt=val' as single argument
     if tickers:
-        entrypoint.append("--tickers=" + tickers)
+        entrypoint.append(f"--tickers={tickers}")
 
     run_options = {
         "entrypoint": entrypoint,

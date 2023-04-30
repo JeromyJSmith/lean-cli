@@ -127,10 +127,7 @@ class OutputConfigManager:
                                    key=lambda d: d.stat().st_mtime,
                                    reverse=True)
 
-        if len(output_json_files) == 0:
-            return None
-
-        return output_json_files[0].parent
+        return None if len(output_json_files) == 0 else output_json_files[0].parent
 
     def get_output_id(self, output_directory: Path) -> Optional[int]:
         """Returns the id of an output, regardless of whether it is a backtest or a live deployment.
@@ -142,11 +139,7 @@ class OutputConfigManager:
         """
         output_id = self._get_id(output_directory, 9)
 
-        if str(output_id)[0] == '9':
-            # no existing id was found
-            return None
-
-        return output_id
+        return None if str(output_id)[0] == '9' else output_id
 
     def _get_id(self, output_directory: Path, prefix: int, id: int = None) -> int:
         config = self.get_output_config(output_directory)

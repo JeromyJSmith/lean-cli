@@ -87,7 +87,7 @@ def _remove_pypi_package_from_python_project(project_dir: Path, name: str) -> No
             new_lines.append(line)
 
     new_content = "\n".join(new_lines).strip()
-    new_content = new_content + "\n" if len(new_content) > 0 else new_content
+    new_content = new_content + "\n" if new_content != "" else new_content
     requirements_file.write_text(new_content, encoding="utf-8")
 
 
@@ -130,8 +130,7 @@ def remove(project: Path, name: str, no_local: bool) -> None:
             library_manager.remove_lean_library_from_csharp_project(project, library_dir, no_local)
         else:
             library_manager.remove_lean_library_from_python_project(project, library_dir)
+    elif project_language == "CSharp":
+        _remove_package_from_csharp_project(project, name, no_local)
     else:
-        if project_language == "CSharp":
-            _remove_package_from_csharp_project(project, name, no_local)
-        else:
-            _remove_pypi_package_from_python_project(project, name)
+        _remove_pypi_package_from_python_project(project, name)

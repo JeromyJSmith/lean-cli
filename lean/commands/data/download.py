@@ -128,7 +128,7 @@ def _display_products(organization: QCFullOrganization, products: List[Product])
 
                 details.append(f"{label}: {result.label}")
 
-        if len(details) == 0:
+        if not details:
             details.append("-")
 
         mapped_files = _map_data_files_to_vendors(organization, product.get_data_files())
@@ -171,7 +171,13 @@ def _select_products_interactive(organization: QCFullOrganization, datasets: Lis
             if category in category_options:
                 continue
 
-            dataset_count = len(list(dataset for dataset in datasets if category in dataset.categories))
+            dataset_count = len(
+                [
+                    dataset
+                    for dataset in datasets
+                    if category in dataset.categories
+                ]
+            )
             category_options[category] = Option(
                 id=category,
                 label=f"{category} ({dataset_count} dataset{'s' if dataset_count > 1 else ''})"
@@ -187,10 +193,14 @@ def _select_products_interactive(organization: QCFullOrganization, datasets: Lis
                                               [Option(id=d, label=d.name) for d in available_datasets])
 
         if dataset.requires_security_master and not organization.has_security_master_subscription():
-            logger.warn("\n".join([
-                f"Your organization needs to have an active Security Master subscription to download data from the '{dataset.name}' dataset",
-                f"You can add the subscription at https://www.quantconnect.com/datasets/quantconnect-security-master/pricing"
-            ]))
+            logger.warn(
+                "\n".join(
+                    [
+                        f"Your organization needs to have an active Security Master subscription to download data from the '{dataset.name}' dataset",
+                        "You can add the subscription at https://www.quantconnect.com/datasets/quantconnect-security-master/pricing",
+                    ]
+                )
+            )
             continue
 
         option_results = OrderedDict()
@@ -255,7 +265,9 @@ def _verify_accept_agreement(organization: QCFullOrganization, open_browser: boo
         if open_browser:
             open(info.agreement)
 
-        logger.info(f"Go to the following url to accept the CLI API Access and Data Agreement:")
+        logger.info(
+            "Go to the following url to accept the CLI API Access and Data Agreement:"
+        )
         logger.info(info.agreement)
         logger.info("Waiting until the CLI API Access and Data Agreement has been accepted...")
 
@@ -315,10 +327,14 @@ def _select_products_non_interactive(organization: QCFullOrganization,
         raise RuntimeError(f"There is no dataset named '{ctx.params['dataset']}'")
 
     if dataset.requires_security_master and not organization.has_security_master_subscription():
-        raise RuntimeError("\n".join([
-            f"Your organization needs to have an active Security Master subscription to download data from the '{dataset.name}' dataset",
-            f"You can add the subscription at https://www.quantconnect.com/datasets/quantconnect-security-master/pricing"
-        ]))
+        raise RuntimeError(
+            "\n".join(
+                [
+                    f"Your organization needs to have an active Security Master subscription to download data from the '{dataset.name}' dataset",
+                    "You can add the subscription at https://www.quantconnect.com/datasets/quantconnect-security-master/pricing",
+                ]
+            )
+        )
 
     option_results = OrderedDict()
     invalid_options = []
@@ -338,7 +354,7 @@ def _select_products_non_interactive(organization: QCFullOrganization,
             except ValueError as error:
                 invalid_options.append(f"--{option.id}: {error}")
 
-    if len(invalid_options) > 0 or len(missing_options) > 0:
+    if invalid_options or missing_options:
         blocks = []
 
         for label, lines in [["Invalid option", invalid_options], ["Missing option", missing_options]]:

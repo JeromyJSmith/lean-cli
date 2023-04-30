@@ -22,14 +22,12 @@ from lean.models.data_providers import all_data_providers
 from lean.models.configuration import Configuration, InfoConfiguration, InternalInputUserInput
 
 def get_configs_for_options(env: str) -> List[Configuration]:
-    if env == "live-cloud":
+    if env in {"backtest", "research"}:
+        brokerage = all_data_providers
+    elif env == "live-cloud":
         brokerage = all_cloud_brokerages
     elif env == "live-local":
         brokerage = all_local_brokerages + all_local_data_feeds + all_data_providers
-    elif env == "backtest":
-        brokerage = all_data_providers
-    elif env == "research":
-        brokerage = all_data_providers
     else:
         raise ValueError("Acceptable values for 'env' are: 'live-cloud', 'live-local', 'backtest', 'research'")
 
@@ -120,11 +118,10 @@ def options_from_json(configurations: List[Configuration]):
         for configuration in reversed(configurations):
             long = configuration._id
             name = str(configuration._id).replace('-', '_')
-            param_decls = (
-                '--' + long,
-                name)
+            param_decls = f'--{long}', name
             attrs = get_options_attributes(
                 configuration, get_default_key(configuration))
             option(*param_decls, **attrs)(f)
         return f
+
     return decorator

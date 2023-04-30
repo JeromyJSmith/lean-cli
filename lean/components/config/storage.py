@@ -21,11 +21,11 @@ def safe_save(data: str, path: str, _retry: int = 0):
     from os import unlink, path as os_path
     from time import time, sleep
 
-    lock_file = Path(str(path) + '.lock').resolve()
+    lock_file = Path(f'{path}.lock').resolve()
     try:
         with open(lock_file, 'x') as _:
             # we create a tmp file we will use to write to. This was we avoid concurrency issues corrupting the file
-            tmp_file = Path(str(path) + '.' + str(uuid4())).resolve()
+            tmp_file = Path(f'{path}.{str(uuid4())}').resolve()
             with open(tmp_file, "w+", encoding="utf-8") as targetFile:
                 targetFile.write(data)
 
@@ -60,8 +60,7 @@ class Storage:
 
         if self.file.exists():
             try:
-                content = self.file.read_text(encoding="utf-8")
-                if content:
+                if content := self.file.read_text(encoding="utf-8"):
                     self._data = loads(content)
                 else:
                     self._data = {}
@@ -81,10 +80,7 @@ class Storage:
         :param default: the default value to return when key is not set
         :return: the value assigned to the key or default if the key is not set
         """
-        if key in self._data:
-            return self._data[key]
-        else:
-            return default
+        return self._data[key] if key in self._data else default
 
     def set(self, key: str, value: Any) -> None:
         """Assigns a value to a key.
@@ -126,6 +122,5 @@ class Storage:
             self.file.parent.mkdir(parents=True, exist_ok=True)
 
             safe_save(data=dumps(self._data, indent=4) + "\n", path=self.file.resolve())
-        else:
-            if self.file.exists():
-                self.file.unlink()
+        elif self.file.exists():
+            self.file.unlink()

@@ -362,10 +362,7 @@ def test_live_calls_lean_runner_with_data_provider(data_provider: str) -> None:
                                 "--data-provider", data_provider,
                                 *options])
 
-    expected = 0
-    # not a valid option
-    if data_provider == 'Terminal Link':
-        expected = 2
+    expected = 2 if data_provider == 'Terminal Link' else 0
     assert result.exit_code == expected
 
     if expected == 0:
@@ -406,7 +403,7 @@ def test_live_non_interactive_aborts_when_missing_brokerage_options(brokerage: s
                                 "--binance-api-secret", "456",
                                 "--binance-use-testnet", "live"])
 
-            if brokerage == "Trading Technologies" or brokerage == "Atreyu":
+            if brokerage in {"Trading Technologies", "Atreyu"}:
                 options.extend(["--live-cash-balance", "USD:100"])
 
             result = CliRunner().invoke(lean, ["live", "Python Project",
@@ -459,7 +456,7 @@ def test_live_non_interactive_do_not_store_non_persistent_properties_in_lean_con
     for key, value in data_feed_required_options[data_feed].items():
         options.extend([f"--{key}", value])
 
-    if brokerage == "Trading Technologies" or brokerage == "Paper Trading":
+    if brokerage in {"Trading Technologies", "Paper Trading"}:
         options.extend(["--live-cash-balance", "USD:100"])
 
     result = CliRunner().invoke(lean, ["live", "Python Project",
@@ -480,8 +477,8 @@ def test_live_non_interactive_do_not_store_non_persistent_properties_in_lean_con
                                                  False,
                                                  False)
 
-    config = container.lean_config_manager.get_lean_config()
     if brokerage in brokerage_required_options_not_persistently_save_in_lean_config:
+        config = container.lean_config_manager.get_lean_config()
         for key in brokerage_required_options_not_persistently_save_in_lean_config[brokerage]:
             assert key not in config
 
@@ -500,7 +497,7 @@ def test_live_non_interactive_calls_run_lean_when_all_options_given(brokerage: s
     for key, value in data_feed_required_options[data_feed].items():
         options.extend([f"--{key}", value])
 
-    if brokerage == "Trading Technologies" or brokerage == "Paper Trading":
+    if brokerage in {"Trading Technologies", "Paper Trading"}:
         options.extend(["--live-cash-balance", "USD:100"])
 
     result = CliRunner().invoke(lean, ["live", "Python Project",
@@ -538,7 +535,7 @@ def test_live_non_interactive_calls_run_lean_when_all_options_given_with_multipl
     for key, value in data_feed_required_options[data_feed2].items():
         options.extend([f"--{key}", value])
 
-    if brokerage == "Trading Technologies" or brokerage == "Paper Trading":
+    if brokerage in {"Trading Technologies", "Paper Trading"}:
         options.extend(["--live-cash-balance", "USD:100"])
 
     result = CliRunner().invoke(lean, ["live", "Python Project",
@@ -579,7 +576,7 @@ def test_live_non_interactive_falls_back_to_lean_config_for_brokerage_settings(b
             for key, value in current_options:
                 options.extend([f"--{key}", value])
 
-            missing_options_config = {key: value for key, value in set(required_options) - set(current_options)}
+            missing_options_config = dict(set(required_options) - set(current_options))
             with (Path.cwd() / "lean.json").open("w+", encoding="utf-8") as file:
                 file.write(json.dumps({
                     **missing_options_config,
@@ -597,7 +594,7 @@ def test_live_non_interactive_falls_back_to_lean_config_for_brokerage_settings(b
                                 "--binance-api-secret", "456",
                                 "--binance-use-testnet", "live"])
 
-            if brokerage == "Trading Technologies" or brokerage == "Atreyu":
+            if brokerage in {"Trading Technologies", "Atreyu"}:
                 options.extend(["--live-cash-balance", "USD:100"])
 
             result = CliRunner().invoke(lean, ["live", "Python Project",
@@ -637,7 +634,7 @@ def test_live_non_interactive_falls_back_to_lean_config_for_data_feed_settings(d
             for key, value in current_options:
                 options.extend([f"--{key}", value])
 
-            missing_options_config = {key: value for key, value in set(required_options) - set(current_options)}
+            missing_options_config = dict(set(required_options) - set(current_options))
             with (Path.cwd() / "lean.json").open("w+", encoding="utf-8") as file:
                 file.write(json.dumps({
                     **missing_options_config,
@@ -685,7 +682,7 @@ def test_live_non_interactive_falls_back_to_lean_config_for_multiple_data_feed_s
             for key, value in current_options:
                 options.extend([f"--{key}", value])
 
-            missing_options_config = {key: value for key, value in set(required_options) - set(current_options)}
+            missing_options_config = dict(set(required_options) - set(current_options))
             with (Path.cwd() / "lean.json").open("w+", encoding="utf-8") as file:
                 file.write(json.dumps({
                     **missing_options_config,

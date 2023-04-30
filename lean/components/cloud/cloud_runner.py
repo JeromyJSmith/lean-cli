@@ -100,9 +100,11 @@ class CloudRunner:
 
         try:
             return self._task_manager.poll(
-                make_request=lambda: self._api_client.optimizations.get(created_optimization.optimizationId),
-                is_done=lambda data: data.status != "active" and data.status != "running",
-                get_progress=lambda data: data.get_progress()
+                make_request=lambda: self._api_client.optimizations.get(
+                    created_optimization.optimizationId
+                ),
+                is_done=lambda data: data.status not in ["active", "running"],
+                get_progress=lambda data: data.get_progress(),
             )
         except KeyboardInterrupt as e:
             if confirm("Do you want to cancel and delete the running optimization?", True):

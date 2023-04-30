@@ -206,7 +206,7 @@ def _migrate_csharp_vscode(project_dir: Path) -> None:
 
 
 def _migrate_csharp_csproj(project_dir: Path) -> None:
-    csproj_path = next((f for f in project_dir.rglob("*.csproj")), None)
+    csproj_path = next(iter(project_dir.rglob("*.csproj")), None)
     if csproj_path is None:
         return
 
@@ -273,9 +273,7 @@ def _select_organization() -> QCMinimalOrganization:
 @option("--image",
               type=str,
               help=f"The LEAN engine image to use (defaults to {DEFAULT_ENGINE_IMAGE})")
-@option("--python-venv",
-              type=str,
-              help=f"The path of the python virtual environment to be used")
+@option("--python-venv", type=str, help="The path of the python virtual environment to be used")
 @option("--update",
               is_flag=True,
               default=False,

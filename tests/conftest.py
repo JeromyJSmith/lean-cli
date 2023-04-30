@@ -47,10 +47,7 @@ def initialize_container(docker_manager_to_use=None, lean_runner_to_use=None, ap
     if cloud_runner_to_use:
         cloud_runner = cloud_runner_to_use
 
-    push_manager = None
-    if push_manager_to_use:
-        push_manager = push_manager_to_use
-
+    push_manager = push_manager_to_use if push_manager_to_use else None
     if organization_manager_to_use:
         organization_manager = organization_manager_to_use
     else:

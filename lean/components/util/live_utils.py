@@ -33,8 +33,12 @@ def _get_last_portfolio(api_client: APIClient, project_id: str, project_name: Pa
     local_last_time = utc.localize(datetime.min)
     live_deployment_path = f"{project_name}/live"
     if path.isdir(live_deployment_path):
-        local_deployment_time = [datetime.strptime(subdir, "%Y-%m-%d_%H-%M-%S").astimezone().astimezone(UTC) for subdir in listdir(live_deployment_path)]
-        if local_deployment_time:
+        if local_deployment_time := [
+            datetime.strptime(subdir, "%Y-%m-%d_%H-%M-%S")
+            .astimezone()
+            .astimezone(UTC)
+            for subdir in listdir(live_deployment_path)
+        ]:
             local_last_time = sorted(local_deployment_time, reverse = True)[0]
 
     if cloud_last_time > local_last_time:
@@ -45,10 +49,12 @@ def _get_last_portfolio(api_client: APIClient, project_id: str, project_name: Pa
         output_directory = container.output_config_manager.get_latest_output_directory("live")
         if not output_directory:
             return None
-        previous_state_file = get_latest_result_json_file(output_directory)
-        if not previous_state_file:
+        if previous_state_file := get_latest_result_json_file(
+            output_directory
+        ):
+            previous_portfolio_state = {x.lower(): y for x, y in loads(open(previous_state_file, "r", encoding="utf-8").read()).items()}
+        else:
             return None
-        previous_portfolio_state = {x.lower(): y for x, y in loads(open(previous_state_file, "r", encoding="utf-8").read()).items()}
     else:
         return None
 
@@ -76,7 +82,6 @@ def get_last_portfolio_cash_holdings(api_client: APIClient, brokerage_instance: 
 
 
 def _configure_initial_cash_interactively(logger: Logger, cash_input_option: LiveInitialStateInput, previous_cash_state: List[Dict[str, Any]]) -> List[Dict[str, float]]:
-    cash_list = []
     previous_cash_balance = []
     if previous_cash_state:
         for cash_state in previous_cash_state.values():
@@ -89,6 +94,7 @@ def _configure_initial_cash_interactively(logger: Logger, cash_input_option: Liv
             return previous_cash_balance
 
         continue_adding = True
+        cash_list = []
         while continue_adding:
             logger.info("Setting initial cash balance...")
             currency = prompt("Currency")
@@ -104,8 +110,7 @@ def _configure_initial_cash_interactively(logger: Logger, cash_input_option: Liv
         return []
 
 
-def configure_initial_cash_balance(logger: Logger, cash_input_option: LiveInitialStateInput, live_cash_balance: str, previous_cash_state: List[Dict[str, Any]])\
-    -> List[Dict[str, float]]:
+def configure_initial_cash_balance(logger: Logger, cash_input_option: LiveInitialStateInput, live_cash_balance: str, previous_cash_state: List[Dict[str, Any]]) -> List[Dict[str, float]]:
     """Interactively configures the intial cash balance.
 
     :param logger: the logger to use
@@ -114,18 +119,19 @@ def configure_initial_cash_balance(logger: Logger, cash_input_option: LiveInitia
     :param previous_cash_state: the dictionary containing cash balance in previous portfolio state
     :return: the list of dictionary containing intial currency and amount information
     """
-    cash_list = []
-    if live_cash_balance or cash_input_option != LiveInitialStateInput.Required:
-        for cash_pair in [x for x in live_cash_balance.split(",") if x]:
-            currency, amount = cash_pair.split(":")
-            cash_list.append({"currency": currency, "amount": float(amount)})
-        return cash_list
-    else:
+    if (
+        not live_cash_balance
+        and cash_input_option == LiveInitialStateInput.Required
+    ):
         return _configure_initial_cash_interactively(logger, cash_input_option, previous_cash_state)
+    cash_list = []
+    for cash_pair in [x for x in live_cash_balance.split(",") if x]:
+        currency, amount = cash_pair.split(":")
+        cash_list.append({"currency": currency, "amount": float(amount)})
+    return cash_list
 
 
 def _configure_initial_holdings_interactively(logger: Logger, holdings_option: LiveInitialStateInput, previous_holdings: List[Dict[str, Any]]) -> List[Dict[str, float]]:
-    holdings = []
     last_holdings = []
     if previous_holdings:
         for holding in previous_holdings.values():
@@ -139,6 +145,7 @@ def _configure_initial_holdings_interactively(logger: Logger, holdings_option: L
             return last_holdings
 
         continue_adding = True
+        holdings = []
         while continue_adding:
             logger.info("Setting custom initial portfolio holdings...")
             symbol = prompt("Symbol")
@@ -156,8 +163,7 @@ def _configure_initial_holdings_interactively(logger: Logger, holdings_option: L
         return []
 
 
-def configure_initial_holdings(logger: Logger, holdings_option: LiveInitialStateInput, live_holdings: str, previous_holdings: List[Dict[str, Any]])\
-    -> List[Dict[str, float]]:
+def configure_initial_holdings(logger: Logger, holdings_option: LiveInitialStateInput, live_holdings: str, previous_holdings: List[Dict[str, Any]]) -> List[Dict[str, float]]:
     """Interactively configures the intial portfolio holdings.
 
     :param logger: the logger to use
@@ -166,14 +172,13 @@ def configure_initial_holdings(logger: Logger, holdings_option: LiveInitialState
     :param previous_holdings: the dictionary containing portfolio holdings in previous portfolio state
     :return: the list of dictionary containing intial symbol, symbol id, quantity, and average price information
     """
-    holdings = []
-    if live_holdings or holdings_option != LiveInitialStateInput.Required:
-        for holding in [x for x in live_holdings.split(",") if x]:
-            symbol, symbol_id, quantity, avg_price = holding.split(":")
-            holdings.append({"symbol": symbol, "symbolId": symbol_id, "quantity": int(quantity), "averagePrice": float(avg_price)})
-        return holdings
-    else:
+    if not live_holdings and holdings_option == LiveInitialStateInput.Required:
         return _configure_initial_holdings_interactively(logger, holdings_option, previous_holdings)
+    holdings = []
+    for holding in [x for x in live_holdings.split(",") if x]:
+        symbol, symbol_id, quantity, avg_price = holding.split(":")
+        holdings.append({"symbol": symbol, "symbolId": symbol_id, "quantity": int(quantity), "averagePrice": float(avg_price)})
+    return holdings
 
 
 def get_latest_result_json_file(output_directory: Path) -> Optional[Path]:
@@ -186,7 +191,4 @@ def get_latest_result_json_file(output_directory: Path) -> Optional[Path]:
         return None
 
     result_file = output_directory / f"{output_id}.json"
-    if not result_file.exists():
-        return None
-
-    return result_file
+    return result_file if result_file.exists() else None

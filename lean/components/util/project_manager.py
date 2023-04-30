@@ -78,7 +78,7 @@ class ProjectManager:
         :return: the path to the directory containing the project with the given local id
         """
         directories = [self._lean_config_manager.get_cli_root_directory()]
-        while len(directories) > 0:
+        while directories:
             directory = directories.pop(0)
 
             config_file = directory / PROJECT_CONFIG_FILE_NAME
@@ -99,7 +99,7 @@ class ProjectManager:
         :return: the path to the directory containing the project with the given cloud id
         """
         directories = [self._lean_config_manager.get_cli_root_directory()]
-        while len(directories) > 0:
+        while directories:
             directory = directories.pop(0)
 
             try:
@@ -263,15 +263,15 @@ class ProjectManager:
         :param project: the name or id of the project
         :return: a list of all the projects in the cloud that match the given name or id
         """
-        search_by_id = isinstance(project, int)
-
         if project is not None:
-            project_path = Path(project).as_posix() if not search_by_id else None
+            search_by_id = isinstance(project, int)
+
+            project_path = None if search_by_id else Path(project).as_posix()
             projects = [cloud_project for cloud_project in cloud_projects
                         if (search_by_id and cloud_project.projectId == project or
                             not search_by_id and Path(cloud_project.name).as_posix() == project_path)]
 
-            if len(projects) == 0:
+            if not projects:
                 raise RuntimeError("No project with the given name or id exists in the cloud")
         else:
             projects = cloud_projects
@@ -400,9 +400,7 @@ class ProjectManager:
 
             new_components.append(component)
 
-        cloud_path = "/".join(new_components)
-
-        return cloud_path
+        return "/".join(new_components)
 
 
     def _generate_python_library_projects_config(self) -> None:
@@ -700,7 +698,7 @@ class ProjectManager:
         required_value = f"&lt;credentials HOST=&quot;localhost&quot; PORT=&quot;2222&quot; USERNAME=&quot;root&quot; PRIVATE_KEY_FILE=&quot;{ssh_dir.as_posix()}/key&quot; USE_KEY_PAIR=&quot;true&quot; USE_AUTH_AGENT=&quot;false&quot; /&gt;"
 
         # Don't do anything if the required entry already exists
-        for option in ssh_credentials.findall(f".//option"):
+        for option in ssh_credentials.findall(".//option"):
             if option.get("value") == required_value.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"'):
                 return
 
@@ -765,7 +763,7 @@ class ProjectManager:
 
             directories.append(path)
 
-        if len(directories) == 0:
+        if not directories:
             directories.append(root_dir / editor_name)
 
         return directories

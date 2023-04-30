@@ -27,8 +27,14 @@ def build_and_configure_modules(modules: List[AddonModule], organization_id: str
     """
     for given_module in modules:
         try:
-            found_module = next((module for module in all_addon_modules if module.get_name().lower() == given_module.lower()), None)
-            if found_module:
+            if found_module := next(
+                (
+                    module
+                    for module in all_addon_modules
+                    if module.get_name().lower() == given_module.lower()
+                ),
+                None,
+            ):
                 found_module.build(lean_config, logger).configure(lean_config, environment_name)
                 found_module.ensure_module_installed(organization_id)
             else:
@@ -46,10 +52,12 @@ def get_and_build_module(target_module_name: str, module_list: List[JsonModule],
     essential_properties_value = {target_module.convert_variable_to_lean_key(prop) : properties[prop] for prop in essential_properties}
     target_module.update_configs(essential_properties_value)
     logger.debug(f"json_module_handler.get_and_build_module(): non-interactive: essential_properties_value with module {target_module_name}: {essential_properties_value}")
-    # now required properties can be fetched as per data/filter provider from essential properties
-    required_properties: List[str] = []
-    for config in target_module.get_required_configs([InternalInputUserInput]):
-        required_properties.append(target_module.convert_lean_key_to_variable(config._id))
+    required_properties: List[str] = [
+        target_module.convert_lean_key_to_variable(config._id)
+        for config in target_module.get_required_configs(
+            [InternalInputUserInput]
+        )
+    ]
     ensure_options(required_properties)
     required_properties_value = {target_module.convert_variable_to_lean_key(prop) : properties[prop] for prop in required_properties}
     target_module.update_configs(required_properties_value)
